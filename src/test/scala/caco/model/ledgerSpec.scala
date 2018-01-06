@@ -21,7 +21,6 @@ class ledgerSpec extends FreeSpec with Matchers {
 
     "locations" in {
 
-      Location ("testfile.caco",1,1)
       Location ("testfile.caco",1)
     }
 

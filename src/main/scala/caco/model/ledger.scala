@@ -6,11 +6,12 @@ type Id = String
 type Description = List[String]
 type Precision = Int
 
-case class Date (value: String) {
+case class Date (value: String,
+                 loc: Option[Location] = None) extends Traceable {
   def validate: Boolean = value.length == 8 // more TODO
 }
 
-case class Location (file: String, line: Int = 0, col: Int = 0)
+case class Location (file: String, char: Int = 0)
 
 
 trait Named        { def id: Id                }
@@ -109,6 +110,11 @@ object ActiveAccount {
       ActiveAccount (id, unit, List(descr), None)
   def apply (id: Id, unit: Unit, descr: String, loc: Location): ActiveAccount =
       ActiveAccount (id, unit, List(descr), Some(loc))
+}
+
+
+object Date {
+  def apply (value: String, loc: Location): Date = Date(value,Some(loc))
 }
 
 }
