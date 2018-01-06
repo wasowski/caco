@@ -86,6 +86,8 @@ case object BOp_LT  extends BOp
 case object BOp_LTE extends BOp
 case object BOp_GT  extends BOp
 case object BOp_GTE extends BOp
+case object BOp_AND extends BOp
+case object BOp_OR extends BOp
 
 sealed trait UOp
 case object UOp_MINUS extends UOp
