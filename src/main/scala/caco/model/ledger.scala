@@ -76,12 +76,16 @@ sealed trait Expr
 case class Ref (id: Id) extends Expr
 case class BExpr (left: Expr, right: Expr, op: BOp) extends Expr
 case class UExpr (op: UOp, right: Expr) extends Expr
-case class Const (value: Int, prec: Precision) extends Expr // prec records how much we scaled up during parsing
+case class Const (value: Long, prec: Precision) extends Expr // prec records how much we scaled up during parsing
 
 sealed trait BOp
 case object BOp_PLUS extends BOp
 case object BOp_MINUS extends BOp
-case object BOp_EQ extends BOp
+case object BOp_EQ  extends BOp
+case object BOp_LT  extends BOp
+case object BOp_LTE extends BOp
+case object BOp_GT  extends BOp
+case object BOp_GTE extends BOp
 
 sealed trait UOp
 case object UOp_MINUS extends UOp
