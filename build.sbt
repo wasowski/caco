@@ -12,5 +12,6 @@ lazy val root = (project in file(".")).settings (
   // scalacOptions += "-language:implicitConversions",
 
   libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test",
-  libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
+  libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+  libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.4"
 )
