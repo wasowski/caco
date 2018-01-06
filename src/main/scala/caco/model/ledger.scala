@@ -11,7 +11,7 @@ case class Date (value: String,
   def validate: Boolean = value.length == 8 // more TODO
 }
 
-case class Location (file: String, char: Int = 0)
+case class Location (file: String, offset: Int = 0)
 
 
 trait Named        { def id: Id                }
