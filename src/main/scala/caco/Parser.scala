@@ -28,7 +28,7 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
 
   def pOperation1: Rule1[Operation] = rule {
     pDate ~ pAccounts ~ PLUSEQ ~ pExpr ~ optional (EQMINUS ~ pAccounts) ~
-    zeroOrMore (pDescription) ~>
+    pDescription.* ~>
     { (d: Date, pa: Seq[Id], e: Expr, oma: Option[Seq[Id]], de:Seq[Id]) =>
         Operation(
           src = pa.toList,
@@ -40,7 +40,7 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
 
   def pOperation2: Rule1[Operation] = rule {
     pDate ~ pAccounts ~ MINUSEQ ~ pExpr ~ optional (EQPLUS ~ pAccounts) ~
-    zeroOrMore (pDescription) ~>
+    pDescription.* ~>
     { (d: Date, ma: Seq[Id], e: Expr, opa: Option[Seq[Id]], de:Seq[Id]) =>
         Operation(
           src = (opa getOrElse Nil).toList,
@@ -50,9 +50,7 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
           descr = de.toList) }
   }
 
-
-
-  def pDescription :Rule1[String] = rule { PIPE ~ capture(zeroOrMore (noneOf("\n"))) }
+  def pDescription :Rule1[String] = rule { PIPE ~ capture(zeroOrMore (noneOf("\n"))) ~ ("\n" | EOI) }
 
   def pAccounts :Rule1[Seq[Id]] = rule { ID.+ separatedBy COMMA }
 

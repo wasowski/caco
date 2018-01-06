@@ -124,8 +124,7 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
       LedgerParser (multline,fname).pOperation.run() should matchPattern {
         case Success(Operation(
             List("skat"), Nil, Const(15835,2), Date("20180102",Some(Location("MOCK",0))),
-            List(" description", " line 1", "line 2"), None, false)) => }
-
+            List(" description", " line 1", " line 2"), None, false)) => }
 
     }
 
