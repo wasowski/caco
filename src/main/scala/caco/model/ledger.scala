@@ -3,17 +3,23 @@ package caco.model
 object ledger {
 
 type Id = String
-type Date =  String // tentatively just a String, 8 chars, not each is good
 type Description = List[String]
 type Precision = Int
 
+case class Date (value: String) {
+  def validate: Boolean = value.length == 8 // more TODO
+}
+
 case class Location (file: String, line: Int = 0, col: Int = 0)
+
 
 trait Named        { def id: Id                }
 trait TimeStamped  { def tstamp: Date          }
 trait Describable  { def descr: Description    }
 trait Typed        { def unit: Unit            }
 trait Traceable    { def loc: Option[Location] }
+trait ModelElement { def validate = true       }
+
 
 type Ledger = List[Line]
 
@@ -43,7 +49,7 @@ case class DerivedAccount (
 
 case class Invariant (
   predicate: Expr,
-  tstamp: Date = "00000000",
+  tstamp: Date = Date("00000000"),
   descr: Description = Nil,
   loc: Option[Location] = None) extends Line with TimeStamped
 

@@ -41,8 +41,8 @@ class ledgerSpec extends FreeSpec with Matchers {
     "invariants and assertions" in {
 
       Invariant (BExpr(Ref("bike"), Ref("queue"), BOp_EQ))
-      Invariant (BExpr(Ref("bike"), Ref("queue"), BOp_EQ), "20171201")
-      Assertion (BExpr(Ref("bike"), Ref("queue"), BOp_EQ), "20171201")
+      Invariant (BExpr(Ref("bike"), Ref("queue"), BOp_EQ), Date ("20171201"))
+      Assertion (BExpr(Ref("bike"), Ref("queue"), BOp_EQ), Date ("20171201"))
     }
 
     "operations" in {
@@ -54,10 +54,10 @@ class ledgerSpec extends FreeSpec with Matchers {
         src = List(bike,queue),
         tgt = List(queue),
         value = Const (378138,2),
-        tstamp = "20171201" )
+        tstamp = Date("20171201") )
 
-      Operation (List(bike), Nil, Const(5000,2), "20171204")
-      Operation (List(bike), Nil, Const(5000,2), "20171204", Nil, None, true)
+      Operation (List(bike), Nil, Const(5000,2), Date("20171204"))
+      Operation (List(bike), Nil, Const(5000,2), Date("20171204"), Nil, None, true)
 
     }
 
