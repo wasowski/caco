@@ -24,14 +24,35 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   def pActiveAccount = rule { "TODO" }
   def pDerivedAccount = rule { "TODO" }
 
-  def pOperation = rule { pOperation1 } // TODO | pOperation2 }
+  def pOperation = rule { pOperation1 | pOperation2 }
 
-  def pOperation1 = rule {
-    pDate ~ pAccounts ~ "+=" ~ pExpr ~ optional ("-=" ~ pAccounts) ~ zeroOrMore (pDescription) }
+  def pOperation1: Rule1[Operation] = rule {
+    pDate ~ pAccounts ~ PLUSEQ ~ pExpr ~ optional (EQMINUS ~ pAccounts) ~
+    zeroOrMore (pDescription) ~>
+    { (d: Date, pa: Seq[Id], e: Expr, oma: Option[Seq[Id]], de:Seq[Id]) =>
+        Operation(
+          src = pa.toList,
+          tgt = (oma getOrElse Nil).toList,
+          value = e,
+          tstamp = d,
+          descr = de.toList) }
+  }
 
-  def pOperation2 = rule { "TODO" }
+  def pOperation2: Rule1[Operation] = rule {
+    pDate ~ pAccounts ~ MINUSEQ ~ pExpr ~ optional (EQPLUS ~ pAccounts) ~
+    zeroOrMore (pDescription) ~>
+    { (d: Date, ma: Seq[Id], e: Expr, opa: Option[Seq[Id]], de:Seq[Id]) =>
+        Operation(
+          src = (opa getOrElse Nil).toList,
+          tgt = ma.toList,
+          value = e,
+          tstamp = d,
+          descr = de.toList) }
+  }
 
-  def pDescription = rule { PIPE ~ zeroOrMore (noneOf("\n")) }
+
+
+  def pDescription :Rule1[String] = rule { PIPE ~ capture(zeroOrMore (noneOf("\n"))) }
 
   def pAccounts :Rule1[Seq[Id]] = rule { ID.+ separatedBy COMMA }
 
@@ -70,11 +91,17 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
     ) ~ WS) }
 
   def COMMA = rule { atomic("," ~ WS) }
-  def PIPE  = rule { atomic("|" ~ WS) }
+  def PIPE  = rule { atomic("|")      }
   def LPAR  = rule { atomic("(" ~ WS) }
   def RPAR  = rule { atomic(")" ~ WS) }
   def MINUS = rule { atomic("-" ~ WS) ~ push (BOp_MINUS) }
   def PLUS  = rule { atomic("+" ~ WS) ~ push (BOp_PLUS)   }
+
+  def PLUSEQ  = rule { atomic("+=" ~ WS) }
+  def EQPLUS  = rule { atomic("=+" ~ WS) }
+  def MINUSEQ = rule { atomic("-=" ~ WS) }
+  def EQMINUS = rule { atomic("=-" ~ WS) }
+
   def EQ  = rule { atomic("==" ~ WS) ~ push (BOp_EQ) }
   def LT  = rule { atomic("<"  ~ WS) ~ push (BOp_LT) }
   def LTE = rule { atomic("<=" ~ WS) ~ push (BOp_LTE) }
@@ -89,7 +116,7 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
 
 
 
-  def pDate  :Rule1[Date] = rule { atomic(pDate6 | pDate8 ~ WS) }
+  def pDate  :Rule1[Date] = rule { (pDate8 | pDate6) ~ WS }
   def pDate8 = rule { push (cursor) ~
     capture(8 times CharPredicate.Digit) ~> { (c:Int, x:String) => Date (x,loc (c)) } }
   def pDate6 = rule { push (cursor) ~

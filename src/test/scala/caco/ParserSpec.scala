@@ -11,22 +11,18 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
 
   "token rules" - {
 
-    "pDate8" in {
+    "pDate" in {
 
-      LedgerParser ("20171202", fname).pDate8.run() should matchPattern
+      LedgerParser ("20171202", fname).pDate.run() should matchPattern
       { case Success (Date("20171202",_)) => }
 
-      LedgerParser ("20171201  ", fname).pDate8.run() should matchPattern
+      LedgerParser ("20171201  ", fname).pDate.run() should matchPattern
       { case Success (Date("20171201",_)) => }
 
-    }
-
-    "pDate6" in {
-
-      LedgerParser ("171201  ", fname).pDate6.run() should matchPattern
+      LedgerParser ("171201  ", fname).pDate.run() should matchPattern
       { case Success (Date("20171201",Some(Location("MOCK",0)))) => }
 
-      LedgerParser ("171201  ", fname).pDate6.run() shouldNot matchPattern
+      LedgerParser ("171201  ", fname).pDate.run() shouldNot matchPattern
       { case Success (Date("171201",_)) => }
 
     }
@@ -106,6 +102,30 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
       LedgerParser ("bike < 1 && car > 2", fname).pExpr.run() should matchPattern
       { case Success (BExpr(BExpr(Ref("bike"),Const(1,0),BOp_LT),
                             BExpr(Ref("car"),Const(2,0),BOp_GT),BOp_AND)) => }
+
+    }
+
+    "operations" in {
+
+      LedgerParser ("20180102 pl += 10000.00 =- ferie",fname).pOperation.run() should matchPattern {
+        case Success(Operation(
+            List("pl"), List("ferie"), Const(10000,0), Date("20180102",Some(Location("MOCK",0))), Nil, None, false)) => }
+
+      LedgerParser ("180103 pl -= 75,011.32 | Transfer to beneficiary",fname).pOperation.run() should matchPattern {
+        case Success(Operation(
+            Nil, List("pl"), Const(7501132,2), Date("20180103",Some(Location("MOCK",0))),
+            List(" Transfer to beneficiary"), None, false)) => }
+
+      val multline = """180102 skat +=    158.35
+                       #| description
+                       #| line 1
+                       #| line 2""".stripMargin ('#')
+
+      LedgerParser (multline,fname).pOperation.run() should matchPattern {
+        case Success(Operation(
+            List("skat"), Nil, Const(15835,2), Date("20180102",Some(Location("MOCK",0))),
+            List(" description", " line 1", "line 2"), None, false)) => }
+
 
     }
 
