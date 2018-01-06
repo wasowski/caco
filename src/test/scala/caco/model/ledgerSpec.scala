@@ -46,17 +46,15 @@ class ledgerSpec extends FreeSpec with Matchers {
 
     "operations" in {
 
-      val bike  = ActiveAccount ("bike", DKK)
-      val queue = ActiveAccount ("queue", DKK, "a buffer awaiting for transfer")
 
       Operation (
-        src = List(bike,queue),
-        tgt = List(queue),
+        src = List("bike","queue"),
+        tgt = List("queue"),
         value = Const (378138,2),
         tstamp = Date("20171201") )
 
-      Operation (List(bike), Nil, Const(5000,2), Date("20171204"))
-      Operation (List(bike), Nil, Const(5000,2), Date("20171204"), Nil, None, true)
+      Operation (List("bike"), Nil, Const(5000,2), Date("20171204"))
+      Operation (List("bike"), Nil, Const(5000,2), Date("20171204"), Nil, None, true)
 
     }
 

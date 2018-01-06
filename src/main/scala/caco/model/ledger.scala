@@ -62,8 +62,8 @@ case class Assertion (
 
 
 case class Operation (
-  src: List[ActiveAccount],
-  tgt: List[ActiveAccount],
+  src: List[Id], // ActiveAccount
+  tgt: List[Id], // ActiveAccount
   value: Expr,
   tstamp: Date,
   descr: Description = Nil,
