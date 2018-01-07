@@ -12,7 +12,7 @@ class ledgerSpec extends FreeSpec with Matchers {
     "units" in {
 
       Unit ("DKK", List("danske kroner"))
-      Unit ("DKK", "danske kroner", None, 3)
+      Unit ("DKK", "danske kroner", NOLOC, 3)
       Unit ("DKK", "danske kroner", 3)
       Unit ("DKK", "danske kroner")
       Unit ("DKK")
@@ -54,7 +54,7 @@ class ledgerSpec extends FreeSpec with Matchers {
         tstamp = Date("20171201") )
 
       Operation (List("bike"), Nil, Const(5000,2), Date("20171204"))
-      Operation (List("bike"), Nil, Const(5000,2), Date("20171204"), Nil, None, true)
+      Operation (List("bike"), Nil, Const(5000,2), Date("20171204"), Nil, NOLOC, true)
 
     }
 

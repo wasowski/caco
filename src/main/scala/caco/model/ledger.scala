@@ -7,18 +7,17 @@ type Description = List[String]
 type Precision = Int
 
 case class Date (value: String,
-                 loc: Option[Location] = None) extends Traceable {
-  def validate: Boolean = value.length == 8 // more TODO
+                 loc: Location = NOLOC) extends Traceable {
 }
 
 case class Location (file: String, offset: Int = 0)
-
+val NOLOC = Location ("",-1) // makes testing without parser easier, don't use outside testing code
 
 trait Named        { def id: Id                }
 trait TimeStamped  { def tstamp: Date          }
 trait Describable  { def descr: Description    }
 trait Typed        { def unit: Unit            }
-trait Traceable    { def loc: Option[Location] }
+trait Traceable    { def loc: Location         }
 trait ModelElement { def validate = true       }
 
 
@@ -29,7 +28,7 @@ trait Line extends Describable with Traceable
 case class Unit (
   id: Id,
   descr: Description = Nil,
-  loc: Option[Location] = None,
+  loc: Location = NOLOC,
   prec: Precision = 2
 ) extends Line with Named
 
@@ -39,26 +38,26 @@ case class ActiveAccount (
   id: Id,
   unit: Unit,
   descr: Description = Nil,
-  loc: Option[Location] = None ) extends Account { }
+  loc: Location = NOLOC ) extends Account { }
 
 case class DerivedAccount (
   id: Id,
   unit: Unit,
   value: Expr,
   descr: Description = Nil,
-  loc: Option[Location] = None ) extends Account { }
+  loc: Location = NOLOC ) extends Account { }
 
 case class Invariant (
   predicate: Expr,
   tstamp: Date = Date("00000000"),
   descr: Description = Nil,
-  loc: Option[Location] = None) extends Line with TimeStamped
+  loc: Location = NOLOC ) extends Line with TimeStamped
 
 case class Assertion (
   predicate: Expr,
   tstamp: Date,
   descr: Description = Nil,
-  loc: Option[Location] = None) extends Line with TimeStamped
+  loc: Location = NOLOC ) extends Line with TimeStamped
 
 
 case class Operation (
@@ -67,7 +66,7 @@ case class Operation (
   value: Expr,
   tstamp: Date,
   descr: Description = Nil,
-  loc: Option[Location] = None,
+  loc: Location = NOLOC,
   pending: Boolean = false ) extends Line with TimeStamped
 
 
@@ -94,33 +93,24 @@ case object UOp_MINUS extends UOp
 
 object Unit {
 
-  def apply (id: Id, descr: String,
-    loc: Option[Location], prec: Precision): Unit =
+  def apply (id: Id, descr: String, loc: Location, prec: Precision): Unit =
       Unit (id, List(descr), loc, prec)
 
-  def apply (id: Id, descr: String, loc: Location,
-      prec: Precision): Unit =
-      Unit (id, List(descr), Some(loc), prec)
-
   def apply (id: Id, descr: String, prec: Precision): Unit =
-      Unit (id, List(descr), None, prec)
+      Unit (id, List(descr), NOLOC, prec)
 
   def apply (id: Id, descr: String): Unit =
-      Unit (id, List(descr), None, 2)
+      Unit (id, List(descr), NOLOC, 2)
 }
 
 
 object ActiveAccount {
 
-  def apply (id: Id, unit: Unit, descr: String): ActiveAccount =
-      ActiveAccount (id, unit, List(descr), None)
-  def apply (id: Id, unit: Unit, descr: String, loc: Location): ActiveAccount =
-      ActiveAccount (id, unit, List(descr), Some(loc))
-}
+  def apply (id: Id, un: Unit, de: String): ActiveAccount =
+      ActiveAccount (id, un, de ::Nil, NOLOC)
 
-
-object Date {
-  def apply (value: String, loc: Location): Date = Date(value,Some(loc))
+  def apply (id: Id, un: Unit, de: String, lo: Location): ActiveAccount =
+      ActiveAccount (id, un, de ::Nil, NOLOC)
 }
 
 }
