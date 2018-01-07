@@ -3,10 +3,10 @@ package caco
 import org.scalatest.{FreeSpec, Matchers,Inside}
 import scala.util.{Success,Failure}
 import reflect.io.Path._
+import caco.ast.ledger._
 
 class LedgerParserSpec extends FreeSpec with Matchers with Inside {
 
-  import caco.model.ledger._
 
   val fname = "MOCK"
 

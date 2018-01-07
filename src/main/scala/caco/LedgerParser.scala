@@ -2,7 +2,7 @@ package caco
 
 import org.parboiled2._
 import shapeless.{::,HNil}
-import caco.model.ledger._
+import caco.ast.ledger._
 
 case class LedgerParser (val input: ParserInput, val fname: String) extends Parser  {
 

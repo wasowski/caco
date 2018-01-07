@@ -1,6 +1,6 @@
 package caco
 
-import model.ledger.Ledger
+import caco.ast.ledger.Ledger
 import scala.util.{Success,Failure}
 
 object Loader {

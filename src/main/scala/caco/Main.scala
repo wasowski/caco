@@ -1,6 +1,6 @@
 package caco
 
-import caco.model.ledger.Ledger
+import caco.ast.ledger.Ledger
 
 object Main extends App {
 
@@ -9,5 +9,15 @@ object Main extends App {
   var le: Ledger = Loader.load (args)
 
   print(le map (_.toString) mkString "\n")
+
+  // name analysis
+
+  // case class Ledger (
+  //   units: Map[Id,Unit]
+  //   accounts: Map[Id,Account],
+  //   operations: List[Operation],
+  //   invariants: List[Invariant],
+  //   assertions: List[Assertions]
+  // )
 
 }
