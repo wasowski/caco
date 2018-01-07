@@ -10,6 +10,8 @@ case class Date (value: String,
                  loc: Location = NOLOC) extends Traceable {
 }
 
+val NULLDATE = Date ("00000000")
+
 case class Location (file: String, offset: Int = 0)
 val NOLOC = Location ("",-1) // makes testing without parser easier, don't use outside testing code
 
@@ -49,13 +51,13 @@ case class DerivedAccount (
 
 case class Invariant (
   predicate: Expr,
-  tstamp: Date = Date("00000000"),
+  tstamp: Date = NULLDATE,
   descr: Description = Nil,
   loc: Location = NOLOC ) extends Line with TimeStamped
 
 case class Assertion (
   predicate: Expr,
-  tstamp: Date,
+  tstamp: Date = NULLDATE,
   descr: Description = Nil,
   loc: Location = NOLOC ) extends Line with TimeStamped
 

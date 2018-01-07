@@ -19,10 +19,7 @@ class ledgerSpec extends FreeSpec with Matchers {
 
     }
 
-    "locations" in {
-
-      Location ("testfile.caco",1)
-    }
+    "locations" in { Location ("testfile.caco",1) }
 
     val DKK = Unit ("DKK")
     val l = Location ("test-file")
