@@ -65,7 +65,7 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
     push (cursor) ~ optional(PENDING) ~ pDate ~ pAccounts ~ MINUSEQ ~ pExpr ~ optional (EQPLUS ~ pAccounts) ~
     pDescription ~>
     { (cu: Int, pe: Option[Boolean], da: Date, ma: Seq[Id],
-      ex: Expr, opa: Option[Seq[Id]], de: Description) =>
+       ex: Expr, opa: Option[Seq[Id]], de: Description) =>
         Operation(
           src = (opa getOrElse Nil).toList,
           tgt = ma.toList,
