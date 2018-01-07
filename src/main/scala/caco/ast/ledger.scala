@@ -25,7 +25,7 @@ trait ModelElement { def validate = true       }
 
 type Ledger = List[Line]
 
-trait Line extends Describable with Traceable
+sealed trait Line extends Describable with Traceable
 
 case class Unit (
   id: Id,
@@ -73,24 +73,31 @@ case class Operation (
 
 sealed trait Expr
 
+object operators {
+
+  sealed trait BOp
+  case object BOp_PLUS extends BOp
+  case object BOp_MINUS extends BOp
+  case object BOp_EQ  extends BOp
+  case object BOp_LT  extends BOp
+  case object BOp_LTE extends BOp
+  case object BOp_GT  extends BOp
+  case object BOp_GTE extends BOp
+  case object BOp_AND extends BOp
+  case object BOp_OR extends BOp
+
+  sealed trait UOp
+  case object UOp_MINUS extends UOp
+}
+
+import operators._
+
 case class Ref (id: Id) extends Expr
 case class BExpr (left: Expr, right: Expr, op: BOp) extends Expr
 case class UExpr (op: UOp, right: Expr) extends Expr
 case class Const (value: Long, prec: Precision) extends Expr // prec records how much we scaled up during parsing
 
-sealed trait BOp
-case object BOp_PLUS extends BOp
-case object BOp_MINUS extends BOp
-case object BOp_EQ  extends BOp
-case object BOp_LT  extends BOp
-case object BOp_LTE extends BOp
-case object BOp_GT  extends BOp
-case object BOp_GTE extends BOp
-case object BOp_AND extends BOp
-case object BOp_OR extends BOp
-
-sealed trait UOp
-case object UOp_MINUS extends UOp
+// companion objects
 
 object Unit {
 

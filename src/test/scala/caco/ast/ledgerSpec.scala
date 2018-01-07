@@ -1,13 +1,14 @@
 package caco.ast
 
 import org.scalatest.{FreeSpec, Matchers}
+import caco.ast.ledger._
+import caco.ast.ledger.operators._
 
 class ledgerSpec extends FreeSpec with Matchers {
 
 
   "ADT representation tests (should compile)" - {
 
-    import ledger._
 
     "units" in {
 

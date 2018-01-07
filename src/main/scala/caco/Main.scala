@@ -12,12 +12,4 @@ object Main extends App {
 
   // name analysis
 
-  // case class Ledger (
-  //   units: Map[Id,Unit]
-  //   accounts: Map[Id,Account],
-  //   operations: List[Operation],
-  //   invariants: List[Invariant],
-  //   assertions: List[Assertions]
-  // )
-
 }

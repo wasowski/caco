@@ -3,6 +3,7 @@ package caco
 import org.parboiled2._
 import shapeless.{::,HNil}
 import caco.ast.ledger._
+import caco.ast.ledger.operators._
 
 case class LedgerParser (val input: ParserInput, val fname: String) extends Parser  {
 
