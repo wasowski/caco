@@ -21,16 +21,15 @@ class ledgerSpec extends FreeSpec with Matchers {
 
     "locations" in { Location ("testfile.caco",1) }
 
-    val DKK = Unit ("DKK")
     val l = Location ("test-file")
 
     "active accounts" in {
 
-      val bike  = ActiveAccount ("bike", DKK)
-      val queue = ActiveAccount ("queue", DKK, "a buffer awaiting for transfer")
+      val bike  = ActiveAccount ("bike", "DKK")
+      val queue = ActiveAccount ("queue", "DKK", "a buffer awaiting for transfer")
 
-      ActiveAccount ("queue", DKK, "a buffer awaiting for transfer", l)
-      DerivedAccount ("D", DKK, BExpr(Ref("bike"),Ref("queue"),BOp_PLUS))
+      ActiveAccount ("queue", "DKK", "a buffer awaiting for transfer", l)
+      DerivedAccount ("D", BExpr(Ref("bike"),Ref("queue"),BOp_PLUS))
 
     }
 

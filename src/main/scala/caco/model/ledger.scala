@@ -18,7 +18,7 @@ val NOLOC = Location ("",-1) // makes testing without parser easier, don't use o
 trait Named        { def id: Id                }
 trait TimeStamped  { def tstamp: Date          }
 trait Describable  { def descr: Description    }
-trait Typed        { def unit: Unit            }
+trait Typed        { def unit: Id              }
 trait Traceable    { def loc: Location         }
 trait ModelElement { def validate = true       }
 
@@ -34,20 +34,19 @@ case class Unit (
   prec: Precision = 2
 ) extends Line with Named
 
-trait Account extends Line with Named with Typed
+trait Account extends Line with Named
 
 case class ActiveAccount (
   id: Id,
-  unit: Unit,
+  unit: Id,
   descr: Description = Nil,
-  loc: Location = NOLOC ) extends Account { }
+  loc: Location = NOLOC ) extends Account with Typed { }
 
 case class DerivedAccount (
   id: Id,
-  unit: Unit,
   value: Expr,
   descr: Description = Nil,
-  loc: Location = NOLOC ) extends Account { }
+  loc: Location = NOLOC ) extends Account { } // these should be typed, too but we need to infer the type
 
 case class Invariant (
   predicate: Expr,
@@ -95,23 +94,23 @@ case object UOp_MINUS extends UOp
 
 object Unit {
 
-  def apply (id: Id, descr: String, loc: Location, prec: Precision): Unit =
-      Unit (id, List(descr), loc, prec)
+  def apply (id: Id, de: String, loc: Location, prec: Precision): Unit =
+      Unit (id, List(de), loc, prec)
 
-  def apply (id: Id, descr: String, prec: Precision): Unit =
-      Unit (id, List(descr), NOLOC, prec)
+  def apply (id: Id, de: String, prec: Precision): Unit =
+      Unit (id, List(de), NOLOC, prec)
 
-  def apply (id: Id, descr: String): Unit =
-      Unit (id, List(descr), NOLOC, 2)
+  def apply (id: Id, de: String): Unit =
+      Unit (id, List(de), NOLOC, 2)
 }
 
 
 object ActiveAccount {
 
-  def apply (id: Id, un: Unit, de: String): ActiveAccount =
+  def apply (id: Id, un: Id, de: String): ActiveAccount =
       ActiveAccount (id, un, de ::Nil, NOLOC)
 
-  def apply (id: Id, un: Unit, de: String, lo: Location): ActiveAccount =
+  def apply (id: Id, un: Id, de: String, lo: Location): ActiveAccount =
       ActiveAccount (id, un, de ::Nil, NOLOC)
 }
 
