@@ -1,0 +1,78 @@
+-- This is a file with random content, exercising most of the grammar
+-- Currencies and commodites tracked
+
+-- two means two significant digits in fractions; 2 is default
+
+unit USD precision 2 | US Dollars
+
+-- Accounts
+
+account bike           [USD]
+account ferie          [USD]
+account flights        [USD]
+account self_insurance [USD]
+account skat           [USD]
+
+-- The D account is derived, so that we don't need to constantly 
+account D == bike + ferie + flights + self_insurance + skat
+| Allocated funds in Brazil
+
+
+-- Invariants  (mostly for enforcing relations between accounts)
+-- This invariant is vacously true, because this is how D is derived
+-- The date informs that the invariant is enforced from that date
+-- set an early date if you want to enforce always (00000000) or drop
+
+171201 invariant D == bike + ferie + flights + self_insurance + skat
+
+-- Initialize the accounts 
+
+-- commented out as this will not work (operations on derived value)
+-- 180106 D              += 154,193.30 | initial import
+
+171201 bike           +=   3,781.38
+171229 ferie          +=  12,151.04
+171222 flights        +=  25,108.29
+171204 skat           +=  35,716.66
+180101 self_insurance +=   4,031.15 
+
+
+-- Recent transactions
+
+180102 self_insurance +=    25.00 
+--------------------------------------------------------------------
+180106 self_insurance == 4,056.15 
+
+
+171204 skat +=    640.17 | compensating for AU exams
+171229 skat +=   3105.15 
+180102 skat +=    158.35 
+| compensating for extra salary 
+| net salary 35174.88, if remains the contribution should be 3263.50
+| this is the last entry for 2017 tax contribution
+--------------------------------------------------------------------
+180106 skat == 39,620.33
+
+
+180102 skat += 10000.00 =- ferie
+180103 skat -= 75,011.32 | Transfer to China
+--------------------------------------------------------------------
+180106 skat    ==    703.63
+180106 ferie   ==  2,151.04
+
+
+171229 flights +=  4,000.00
+180102 flights -=    288.84 | December trains
+--------------------------------------------------------------------
+180106 flights == 28,819.45
+
+180102 bike += 50 
+--------------------------------------------------------------------
+180102 bike == 3,831.38
+
+pending 171222 flights -= 835 | SK NRT ARN NRT 27-28 FEB
+pending 171222 flights -= 382 | NZ NRT AUC NRT 27-28 MAR
+pending 171222 flights -= 599 | LH YYZ WAW YYZ 27-28 APR
+pending 180102 flights -= 837 | AF YUL TRD YUL 14-15 MAY
+pending 180102 flights -= 383 | BA YYC YYV YYC 20-21 JUN
+pending 180102 flights -= 580 | DY BOS LYR BOS 16-17 JUL

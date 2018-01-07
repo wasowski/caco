@@ -1,0 +1,18 @@
+-- This is a file with random content, exercising most of the grammar
+-- Currencies and commodites tracked
+
+-- two means two significant digits in fractions; 2 is default
+
+unit USD precision 2 | US Dollars
+
+-- Accounts
+
+account bike           [USD]
+account ferie          [USD]
+account flights        [USD]
+account self_insurance [USD]
+account skat           [USD]
+
+-- The D account is derived, so that we don't need to constantly 
+account D == bike + ferie + flights + self_insurance + skat
+| Allocated funds in Brazil
