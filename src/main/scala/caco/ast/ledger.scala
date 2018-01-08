@@ -1,5 +1,7 @@
 package caco.ast
 
+import caco.Location
+
 object ledger {
 
 type Id = String
@@ -10,10 +12,7 @@ case class Date (value: String,
                  loc: Location = NOLOC) extends Traceable {
 }
 
-val NULLDATE = Date ("00000000")
-
-case class Location (file: String, offset: Int = 0)
-val NOLOC = Location ("",-1) // makes testing without parser easier, don't use outside testing code
+private val NULLDATE = Date ("00000000")
 
 trait Named        { def id: Id                }
 trait TimeStamped  { def tstamp: Date          }
@@ -26,6 +25,8 @@ trait ModelElement { def validate = true       }
 type Ledger = List[Line]
 
 sealed trait Line extends Describable with Traceable
+
+private val NOLOC = Location ("",-1) // makes testing without parser easier, don't use outside testing code
 
 case class Unit (
   id: Id,

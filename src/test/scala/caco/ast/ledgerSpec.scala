@@ -3,9 +3,11 @@ package caco.ast
 import org.scalatest.{FreeSpec, Matchers}
 import caco.ast.ledger._
 import caco.ast.ledger.operators._
+import caco.Location
 
 class ledgerSpec extends FreeSpec with Matchers {
 
+  private val NOLOC = Location ("",-1) // makes testing without parser easier, don't use outside testing code
 
   "ADT representation tests (should compile)" - {
 

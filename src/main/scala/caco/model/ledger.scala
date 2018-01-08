@@ -1,6 +1,7 @@
 package caco.model
 
 import caco.ast.{ledger => ast}
+import caco.Location
 
 object ledger {
 
@@ -9,7 +10,6 @@ object ledger {
   type Date = ast.Date
   type Description = ast.Description
   type Id = ast.Id
-  type Location = ast.Location
   type Precision = ast.Precision
   type Unit = ast.Unit
 
@@ -24,7 +24,8 @@ object ledger {
   sealed trait Command extends TimeStamped with Describable with Traceable
 
   sealed trait Account extends Describable with HasUnit with Typed with Traceable {
-    def ty = UnitTy (this.unit)
+    def ty: Type = UnitTy (unit)
+    def prec: Precision = unit.prec
   }
 
   case class ActiveAccount (
@@ -32,7 +33,7 @@ object ledger {
     unit: Unit,
     descr: Description,
     loc: Location,
-    prec: Precision) extends Account
+  ) extends Account
 
   case class DerivedAccount (
     id: Id,
@@ -50,9 +51,7 @@ object ledger {
     loc: Location,
     pending: Boolean,
     unit: Unit) extends Command with Typed
-  {
-    def ty = value.ty
-  }
+  { def ty = value.ty }
 
   case class Invariant (
     predicate: Expr,
@@ -64,11 +63,11 @@ object ledger {
     predicate: Expr,
     tstamp: Date,
     descr: Description,
-    loc: Location) extends Command
+    loc: Location ) extends Command
 
   case class Ledger (
-    units:    Map[Id,Unit],
-    accounts: Map[Id,Account],
+    units:    List[Unit],
+    accounts: List[Account],
     commands: List[Command] )
 
   // Type language
@@ -82,9 +81,6 @@ object ledger {
   sealed trait Expr extends Typed
 
   import caco.ast.ledger.operators._
-
-  // TODO think how to avoid recomputing types, make them a decoration that is easily
-  // accessible; perhaps we will need to make "untyped" reconstructors
 
   case class Ref (ac: Account, ty: Type) extends Expr
   case class BExpr (left: Expr, right: Expr, op: BOp, ty: Type) extends Expr
