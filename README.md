@@ -1,7 +1,7 @@
 # caco
 Cash Command - personal finance management
 
-Major assumptions
+Major requirements
 
 * Human readable textual file format (helps to identify data corruptions when it happens)
 * Invariants and assertions (help to debug data inconsistencies)
