@@ -9,11 +9,12 @@ object ledger {
 
   type Date = ast.Date
   type Description = ast.Description
-  type Id = ast.Id
+  type AccountId = ast.AccountId
+  type UnitIt = ast.UnitId
   type Precision = ast.Precision
   type Unit = ast.Unit
 
-  type Named = ast.Named
+  type Named[Id] = ast.Named[Id] // TODO: not used
   type TimeStamped = ast.TimeStamped
   type Describable = ast.Describable
   type Traceable = ast.Traceable
@@ -29,14 +30,14 @@ object ledger {
   }
 
   case class ActiveAccount (
-    id: Id,
+    id: AccountId,
     unit: Unit,
     descr: Description,
     loc: Location,
   ) extends Account
 
   case class DerivedAccount (
-    id: Id,
+    id: AccountId,
     value: Expr,
     descr: Description,
     loc: Location,

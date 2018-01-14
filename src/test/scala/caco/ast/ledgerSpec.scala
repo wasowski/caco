@@ -14,11 +14,11 @@ class ledgerSpec extends FreeSpec with Matchers {
 
     "units" in {
 
-      Unit ("DKK", List("danske kroner"))
-      Unit ("DKK", "danske kroner", NOLOC, 3)
-      Unit ("DKK", "danske kroner", 3)
-      Unit ("DKK", "danske kroner")
-      Unit ("DKK")
+      Unit (UnitId("DKK"), List("danske kroner"))
+      Unit (UnitId("DKK"), "danske kroner", NOLOC, Precision(3))
+      Unit (UnitId("DKK"), "danske kroner", Precision(3))
+      Unit (UnitId("DKK"), "danske kroner")
+      Unit (UnitId("DKK"))
 
     }
 
@@ -28,32 +28,32 @@ class ledgerSpec extends FreeSpec with Matchers {
 
     "active accounts" in {
 
-      val bike  = ActiveAccount ("bike", "DKK")
-      val queue = ActiveAccount ("queue", "DKK", "a buffer awaiting for transfer")
+      val bike  = ActiveAccount (AccountId("bike"), UnitId("DKK"))
+      val queue = ActiveAccount (AccountId("queue"), UnitId("DKK"), "a buffer awaiting for transfer")
 
-      ActiveAccount ("queue", "DKK", "a buffer awaiting for transfer", l)
-      DerivedAccount ("D", BExpr(Ref("bike"),Ref("queue"),BOp_PLUS))
+      ActiveAccount (AccountId("queue"), UnitId("DKK"), "a buffer awaiting for transfer", l)
+      DerivedAccount (AccountId("D"), BExpr(Ref(AccountId("bike")),Ref(AccountId("queue")),BOp_PLUS))
 
     }
 
     "invariants and assertions" in {
 
-      Invariant (BExpr(Ref("bike"), Ref("queue"), BOp_EQ))
-      Invariant (BExpr(Ref("bike"), Ref("queue"), BOp_EQ), Date ("20171201"))
-      Assertion (BExpr(Ref("bike"), Ref("queue"), BOp_EQ), Date ("20171201"))
+      Invariant (BExpr(Ref(AccountId("bike")), Ref(AccountId("queue")), BOp_EQ))
+      Invariant (BExpr(Ref(AccountId("bike")), Ref(AccountId("queue")), BOp_EQ), Date ("20171201"))
+      Assertion (BExpr(Ref(AccountId("bike")), Ref(AccountId("queue")), BOp_EQ), Date ("20171201"))
     }
 
     "operations" in {
 
 
       Operation (
-        src = List("bike","queue"),
-        tgt = List("queue"),
-        value = Const (378138,2),
+        src = List(AccountId("bike"),AccountId("queue")),
+        tgt = List(AccountId("queue")),
+        value = Const (378138,Precision(2)),
         tstamp = Date("20171201") )
 
-      Operation (List("bike"), Nil, Const(5000,2), Date("20171204"))
-      Operation (List("bike"), Nil, Const(5000,2), Date("20171204"), Nil, NOLOC, true)
+      Operation (List(AccountId("bike")), Nil, Const(5000,Precision(2)), Date("20171204"))
+      Operation (List(AccountId("bike")), Nil, Const(5000,Precision(2)), Date("20171204"), Nil, NOLOC, true)
 
     }
 

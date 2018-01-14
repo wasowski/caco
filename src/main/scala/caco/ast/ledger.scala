@@ -1,12 +1,40 @@
 package caco.ast
 
 import caco.Location
+import scalaz.{Tag, @@}
+
 
 object ledger {
 
-type Id = String
+object Tag {
+  sealed class AccountId
+  sealed class UnitId
+  sealed class Precision
+  sealed class Description
+}
+
+type AccountId = String @@ Tag.AccountId
+object AccountId {
+  def apply(s: String) = s.asInstanceOf[AccountId]
+  def unapply (s: AccountId): Option[String] = Some(s.asInstanceOf[String])
+}
+
+type UnitId = String @@ Tag.UnitId
+object UnitId {
+  def apply(s: String) = s.asInstanceOf[UnitId]
+  def unapply (s: UnitId): Option[String] = Some(s.asInstanceOf[String])
+}
+
+// not tagging descriptions as the risk of confusion is close to none
 type Description = List[String]
-type Precision = Int
+
+
+
+type Precision = Int @@ Tag.Precision
+object Precision {
+  def apply (n: Int) = n.asInstanceOf[Precision]
+  def unapply (pr: Precision): Option[Int] = Some(pr.asInstanceOf[Int])
+}
 
 case class Date (value: String,
                  loc: Location = NOLOC) extends Traceable {
@@ -14,10 +42,11 @@ case class Date (value: String,
 
 private val NULLDATE = Date ("00000000")
 
-trait Named        { def id: Id                }
+trait Named[Id]    { def id: Id
+                     def toString: String      }
 trait TimeStamped  { def tstamp: Date          }
 trait Describable  { def descr: Description    }
-trait Typed        { def unit: Id              }
+trait Typed        { def unit: UnitId          }
 trait Traceable    { def loc: Location         }
 trait ModelElement { def validate = true       }
 
@@ -29,25 +58,26 @@ sealed trait Line extends Describable with Traceable
 private val NOLOC = Location ("",-1) // makes testing without parser easier, don't use outside testing code
 
 case class Unit (
-  id: Id,
+  id: UnitId,
   descr: Description = Nil,
   loc: Location = NOLOC,
-  prec: Precision = 2
-) extends Line with Named
+  prec: Precision = Precision(2)
 
-trait Account extends Line with Named
+) extends Line with Named[UnitId]
+
+trait Account extends Line with Named[AccountId]
 
 case class ActiveAccount (
-  id: Id,
-  unit: Id,
+  id: AccountId,
+  unit: UnitId,
   descr: Description = Nil,
-  loc: Location = NOLOC ) extends Account with Typed { }
+  loc: Location = NOLOC ) extends Account with Typed
 
 case class DerivedAccount (
-  id: Id,
+  id: AccountId,
   value: Expr,
   descr: Description = Nil,
-  loc: Location = NOLOC ) extends Account { } // these should be typed, too but we need to infer the type
+  loc: Location = NOLOC ) extends Account
 
 case class Invariant (
   predicate: Expr,
@@ -61,10 +91,9 @@ case class Assertion (
   descr: Description = Nil,
   loc: Location = NOLOC ) extends Line with TimeStamped
 
-
 case class Operation (
-  src: List[Id], // ActiveAccount
-  tgt: List[Id], // ActiveAccount
+  src: List[AccountId], // ActiveAccount
+  tgt: List[AccountId], // ActiveAccount
   value: Expr,
   tstamp: Date,
   descr: Description = Nil,
@@ -93,7 +122,7 @@ object operators {
 
 import operators._
 
-case class Ref (id: Id) extends Expr
+case class Ref (id: AccountId) extends Expr
 case class BExpr (left: Expr, right: Expr, op: BOp) extends Expr
 case class UExpr (op: UOp, right: Expr) extends Expr
 case class Const (value: Long, prec: Precision) extends Expr // prec records how much we scaled up during parsing
@@ -102,23 +131,23 @@ case class Const (value: Long, prec: Precision) extends Expr // prec records how
 
 object Unit {
 
-  def apply (id: Id, de: String, loc: Location, prec: Precision): Unit =
+  def apply (id: UnitId, de: String, loc: Location, prec: Precision): Unit =
       Unit (id, List(de), loc, prec)
 
-  def apply (id: Id, de: String, prec: Precision): Unit =
+  def apply (id: UnitId, de: String, prec: Precision): Unit =
       Unit (id, List(de), NOLOC, prec)
 
-  def apply (id: Id, de: String): Unit =
-      Unit (id, List(de), NOLOC, 2)
+  def apply (id: UnitId, de: String): Unit =
+      Unit (id, List(de), NOLOC)
 }
 
 
 object ActiveAccount {
 
-  def apply (id: Id, un: Id, de: String): ActiveAccount =
+  def apply (id: AccountId, un: UnitId, de: String): ActiveAccount =
       ActiveAccount (id, un, de ::Nil, NOLOC)
 
-  def apply (id: Id, un: Id, de: String, lo: Location): ActiveAccount =
+  def apply (id: AccountId, un: UnitId, de: String, lo: Location): ActiveAccount =
       ActiveAccount (id, un, de ::Nil, NOLOC)
 }
 

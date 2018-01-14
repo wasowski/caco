@@ -18,8 +18,8 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
 
   def pUnit: Rule1[Unit] = rule {
     push(cursor) ~ UNIT ~ ID ~ (PRECISION ~ INT).? ~ pDescription ~> {
-      (cu: Int, id: Id, pr: Option[Int], de: Description) =>
-        Unit (id, de, loc(cu), pr getOrElse 2) }
+      (cu: Int, id: String, pr: Option[Int], de: Description) =>
+        Unit (UnitId(id), de, loc(cu), Precision(pr getOrElse 2)) }
   }
 
   def pInvariant :Rule1[Invariant] = rule {
@@ -38,14 +38,14 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
 
   def pActiveAccount: Rule1[ActiveAccount] = rule {
     push (cursor) ~ ACCOUNT ~ ID ~ LBRK ~ ID ~ RBRK ~ pDescription ~> {
-      (cu: Int, ac: Id, un: Id, de: Description) =>
-        ActiveAccount (id=ac, unit=un, descr=de, loc=loc(cu)) }
+      (cu: Int, ac: String, un: String, de: Description) =>
+        ActiveAccount (id=AccountId(ac), unit=UnitId(un), descr=de, loc=loc(cu)) }
   }
 
   def pDerivedAccount: Rule1[DerivedAccount] = rule {
     push (cursor) ~ ACCOUNT ~ ID ~ EQ ~ pExpr ~ pDescription ~> {
-      (cu: Int, ac: Id, _: BOp, ex: Expr, de: Description) =>
-        DerivedAccount (id=ac, value=ex, descr=de, loc=loc(cu)) }
+      (cu: Int, ac: String, _: BOp, ex: Expr, de: Description) =>
+        DerivedAccount (id=AccountId(ac), value=ex, descr=de, loc=loc(cu)) }
   }
 
   def pOperation = rule { pOperation1 | pOperation2 }
@@ -53,8 +53,8 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   def pOperation1: Rule1[Operation] = rule {
     push (cursor) ~ optional(PENDING) ~ pDate ~ pAccounts ~ PLUSEQ ~ pExpr ~ optional (EQMINUS ~ pAccounts) ~
     pDescription ~>
-    { (cu: Int, pe: Option[Boolean], da: Date, pa: Seq[Id],
-       ex: Expr, ma: Option[Seq[Id]], de: Description) =>
+    { (cu: Int, pe: Option[Boolean], da: Date, pa: Seq[AccountId],
+       ex: Expr, ma: Option[Seq[AccountId]], de: Description) =>
         Operation(
           src = pa.toList, tgt = (ma getOrElse Nil).toList,
           value = ex, tstamp = da, descr = de,
@@ -65,8 +65,8 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   def pOperation2: Rule1[Operation] = rule {
     push (cursor) ~ optional(PENDING) ~ pDate ~ pAccounts ~ MINUSEQ ~ pExpr ~ optional (EQPLUS ~ pAccounts) ~
     pDescription ~>
-    { (cu: Int, pe: Option[Boolean], da: Date, ma: Seq[Id],
-       ex: Expr, opa: Option[Seq[Id]], de: Description) =>
+    { (cu: Int, pe: Option[Boolean], da: Date, ma: Seq[AccountId],
+       ex: Expr, opa: Option[Seq[AccountId]], de: Description) =>
         Operation(
           src = (opa getOrElse Nil).toList,
           tgt = ma.toList,
@@ -84,7 +84,9 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
     oneDescription.* ~> { (de: Seq[String]) => de.toList }
   }
 
-  def pAccounts :Rule1[Seq[Id]] = rule { ID.+ separatedBy COMMA }
+  def pAccounts :Rule1[Seq[AccountId]] = rule {
+    (ID.+ separatedBy COMMA) ~> { (ac: Seq[String]) => ac map (a => AccountId(a))}
+  }
 
 
 
@@ -105,10 +107,10 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   // we don't have multiplication but we prime for it in the future
   def pTerm:   Rule1[Expr]  = rule { pFactor }
   def pFactor: Rule1[Expr]  = rule { pAmount | pParens | pRef }
-  def pRef:    Rule1[Ref]   = rule { ID ~> { (id:String) => Ref (id) }  }
+  def pRef:    Rule1[Ref]   = rule { ID ~> { (id: String) => Ref (AccountId(id)) }  }
   def pParens: Rule1[Expr]  = rule { LPAR ~ pExpr ~ RPAR }
   def pAmount: Rule1[Const] = rule {
-    FINUM ~> { (nprec: (Long,Int)) => Const(nprec._1,nprec._2) } }
+    FINUM ~> { (nprec: (Long,Precision)) => Const(nprec._1,nprec._2) } }
 
 
 
@@ -124,11 +126,11 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
 
   def COMMENT: Rule0 = rule { "--" ~ (noneOf("\n")).* ~ ("\n" | test(cursorChar == EOI)) }
 
-  def ID: Rule1[Id] = rule {
+  def ID: Rule1[String] = rule {
     (capture(
       (CharPredicate.Alpha | "_") ~
         zeroOrMore (CharPredicate.AlphaNum | "_" )
-    ) ~ WS) }
+  ) ~ WS) }
 
   def COMMA = kwd (",")
   def PIPE  = rule { atomic("|")      }
@@ -165,11 +167,11 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
 
   def INT = rule { INTSTR ~ WS ~> { _.toInt } }
 
-  def FINUM: Rule1[(Long,Int)] = rule {
+  def FINUM: Rule1[(Long,Precision)] = rule {
     FINUM_PRE ~ optional(FIXEDPNO_SUF) ~ WS ~> {
     (pre: String, suf: Option[String]) =>
       val dec = suf getOrElse ""
-      ((pre+dec).toLong, dec.size) }
+      ((pre+dec).toLong, Precision(dec.size)) }
   }
 
   private def INTSTR: Rule1[String] = rule { capture(CharPredicate.Digit.+) }
