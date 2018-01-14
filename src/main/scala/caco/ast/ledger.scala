@@ -1,8 +1,7 @@
 package caco.ast
 
 import caco.Location
-import scalaz.{Tag, @@}
-
+import scalaz.@@
 
 object ledger {
 
@@ -10,7 +9,6 @@ object Tag {
   sealed class AccountId
   sealed class UnitId
   sealed class Precision
-  sealed class Description
 }
 
 type AccountId = String @@ Tag.AccountId
@@ -53,7 +51,14 @@ trait ModelElement { def validate = true       }
 
 type Ledger = List[Line]
 
-sealed trait Line extends Describable with Traceable
+sealed trait Line extends Describable with Traceable {
+  def getUnit: Option[Unit] = None
+  def getActiveAccount: Option[ActiveAccount] = None
+  def getDerivedAccount: Option[DerivedAccount] = None
+  def getInvariant: Option[Invariant] = None
+  def getAssertion: Option[Assertion] = None
+  def getOperation: Option[Operation] = None
+}
 
 private val NOLOC = Location ("",-1) // makes testing without parser easier, don't use outside testing code
 
@@ -62,8 +67,9 @@ case class Unit (
   descr: Description = Nil,
   loc: Location = NOLOC,
   prec: Precision = Precision(2)
-
 ) extends Line with Named[UnitId]
+{ override def getUnit = Some(this) }
+
 
 trait Account extends Line with Named[AccountId]
 
@@ -72,24 +78,28 @@ case class ActiveAccount (
   unit: UnitId,
   descr: Description = Nil,
   loc: Location = NOLOC ) extends Account with Typed
+{ override def getActiveAccount = Some(this) }
 
 case class DerivedAccount (
   id: AccountId,
   value: Expr,
   descr: Description = Nil,
   loc: Location = NOLOC ) extends Account
+{ override def getDerivedAccount = Some(this) }
 
 case class Invariant (
   predicate: Expr,
   tstamp: Date = NULLDATE,
   descr: Description = Nil,
   loc: Location = NOLOC ) extends Line with TimeStamped
+{ override def getInvariant = Some(this) }
 
 case class Assertion (
   predicate: Expr,
   tstamp: Date = NULLDATE,
   descr: Description = Nil,
   loc: Location = NOLOC ) extends Line with TimeStamped
+{ override def getAssertion = Some(this) }
 
 case class Operation (
   src: List[AccountId], // ActiveAccount
@@ -99,6 +109,7 @@ case class Operation (
   descr: Description = Nil,
   loc: Location = NOLOC,
   pending: Boolean = false ) extends Line with TimeStamped
+{ override def getOperation = Some(this) }
 
 
 sealed trait Expr

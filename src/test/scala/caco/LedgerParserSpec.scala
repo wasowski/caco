@@ -1,7 +1,7 @@
 package caco
 
 import org.scalatest.{FreeSpec, Matchers,Inside}
-import scala.util.{Success,Failure}
+import scala.util.{Try,Success,Failure}
 import reflect.io.Path._
 import caco.ast.ledger._
 import caco.ast.ledger.operators._
@@ -57,21 +57,28 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
 
   }
 
+
   "AST" - {
 
     "pAccounts" in {
 
+      // Apparently due to type erasue the following matches of Seq[AccountId]
+      // to Seq[String] works, and even worse so, allows to avoid warnings.
+      // Otherwise we get warnings and still AccountId matches as well as UnitId
+      // in all the below positions.  Apparently, we should not really pattern
+      // match on the tagged types.
+
       LedgerParser ("bike,self_insurance,D", fname).pAccounts.run() should matchPattern
-      { case Success (Seq(AccountId("bike"),AccountId("self_insurance"),AccountId("D"))) => }
+      { case Success (Seq("bike","self_insurance","D")) => }
 
       LedgerParser ("bike  ,  self_insurance, D", fname).pAccounts.run() should matchPattern
-      { case Success (Seq(AccountId("bike"),AccountId("self_insurance"),AccountId("D"))) => }
+      { case Success (Seq("bike","self_insurance","D")) => }
 
       LedgerParser ("", fname).pAccounts.run() should matchPattern
       { case Failure (_) => }
 
       LedgerParser ("_alamakoTa1", fname).pAccounts.run() should matchPattern
-      { case Success(Seq(AccountId("_alamakoTa1"))) => }
+      { case Success(Seq("_alamakoTa1")) => }
 
     }
 
@@ -85,6 +92,7 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
 
       LedgerParser ("self_insurance", fname).pTerm.run() should matchPattern
       { case Success (Ref(AccountId("self_insurance"))) => }
+
 
       LedgerParser ("bike", fname).pExpr.run() should matchPattern
       { case Success (Ref(AccountId("bike"))) => }
