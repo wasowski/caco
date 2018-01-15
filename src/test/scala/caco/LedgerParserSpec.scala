@@ -93,7 +93,6 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
       LedgerParser ("self_insurance", fname).pTerm.run() should matchPattern
       { case Success (Ref(AccountId("self_insurance"))) => }
 
-
       LedgerParser ("bike", fname).pExpr.run() should matchPattern
       { case Success (Ref(AccountId("bike"))) => }
 
