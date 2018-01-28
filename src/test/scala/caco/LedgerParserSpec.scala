@@ -120,10 +120,21 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
         case Success(Operation(
             List(AccountId("pl")), List(AccountId("ferie")), Const(10000,Precision(0)), Date("20180102",_), Nil, _, false)) => }
 
+      LedgerParser ("20180102 pl <- 10000.00 <- ferie",fname).pOperation.run() should matchPattern {
+        case Success(Operation(
+            List(AccountId("pl")), List(AccountId("ferie")), Const(10000,Precision(0)), Date("20180102",_), Nil, _, false)) => }
+
+
       LedgerParser ("180103 pl -= 75,011.32 | Transfer to beneficiary",fname).pOperation.run() should matchPattern {
         case Success(Operation(
             Nil, List(AccountId("pl")), Const(7501132,Precision(2)), Date("20180103",_),
             List(" Transfer to beneficiary"), _, false)) => }
+
+      LedgerParser ("180103 pl -> 75,011.32 | Transfer to beneficiary",fname).pOperation.run() should matchPattern {
+        case Success(Operation(
+            Nil, List(AccountId("pl")), Const(7501132,Precision(2)), Date("20180103",_),
+            List(" Transfer to beneficiary"), _, false)) => }
+
 
       val multline = """180102 skat +=    158.35
                        #| description

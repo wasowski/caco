@@ -51,7 +51,7 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   def pOperation = rule { pOperation1 | pOperation2 }
 
   def pOperation1: Rule1[Operation] = rule {
-    push (cursor) ~ optional(PENDING) ~ pDate ~ pAccounts ~ PLUSEQ ~ pExpr ~ optional (EQMINUS ~ pAccounts) ~
+    push (cursor) ~ optional(PENDING) ~ pDate ~ pAccounts ~ (PLUSEQ | LEFT) ~ pExpr ~ optional ((EQMINUS | LEFT) ~ pAccounts) ~
     pDescription ~>
     { (cu: Int, pe: Option[Boolean], da: Date, pa: Seq[AccountId],
        ex: Expr, ma: Option[Seq[AccountId]], de: Description) =>
@@ -63,7 +63,7 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   }
 
   def pOperation2: Rule1[Operation] = rule {
-    push (cursor) ~ optional(PENDING) ~ pDate ~ pAccounts ~ MINUSEQ ~ pExpr ~ optional (EQPLUS ~ pAccounts) ~
+    push (cursor) ~ optional(PENDING) ~ pDate ~ pAccounts ~ (MINUSEQ | RIGHT) ~ pExpr ~ optional ((EQPLUS | RIGHT) ~ pAccounts) ~
     pDescription ~>
     { (cu: Int, pe: Option[Boolean], da: Date, ma: Seq[AccountId],
        ex: Expr, opa: Option[Seq[AccountId]], de: Description) =>
@@ -145,6 +145,9 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   def EQPLUS  = kwd ("=+")
   def MINUSEQ = kwd ("-=")
   def EQMINUS = kwd ("=-")
+
+  def LEFT = kwd ("<-")
+  def RIGHT = kwd ("->")
 
   def EQ  = rule { atomic("==" ~ WS) ~ push (BOp_EQ) }
   def LT  = rule { atomic("<"  ~ WS) ~ push (BOp_LT) }
