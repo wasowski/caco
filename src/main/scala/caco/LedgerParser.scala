@@ -3,7 +3,6 @@ package caco
 import org.parboiled2._
 import shapeless.{::,HNil}
 import caco.ast.ledger._
-import caco.ast.ledger.operators._
 
 case class LedgerParser (val input: ParserInput, val fname: String) extends Parser  {
 
@@ -93,24 +92,24 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   // Expression language
 
   def pExpr:     Rule1[Expr] = rule { pBoolExpr | pTermExpr }
+  val bexpr = (l: Expr, cu: Int, o: BOp, r: Expr) => BExpr (l,r,o, loc(cu))
 
   def pBoolExpr: Rule1[Expr] = rule { pCompExpr ~ addComp.* }
-  def addComp :Rule[Expr :: HNil, Expr :: HNil] = rule { BOOLOP ~ pCompExpr ~> bexpr _ }
+  def addComp :Rule[Expr ::HNil, Expr :: HNil] = rule { push (cursor) ~ BOOLOP ~ pCompExpr ~> bexpr }
 
   def pCompExpr: Rule1[Expr] = rule {
-    pTermExpr ~ COMPOP ~ pTermExpr ~> {(l:Expr,o:BOp,r:Expr) => BExpr(l,r,o)}}
+    push (cursor) ~ pTermExpr ~ COMPOP ~ pTermExpr ~> {(cu: Int, l:Expr,o:BOp,r:Expr) => BExpr(l,r,o,loc(cu))}}
 
   def pTermExpr: Rule1[Expr] = rule { pTerm ~ addTerm.* }
-  def bexpr (l: Expr, o: BOp, r: Expr) :Expr = BExpr (l,r,o)
-  def addTerm :Rule[Expr :: HNil, Expr :: HNil] = rule { TERMOP ~ pTerm ~> bexpr _ }
+  def addTerm :Rule[Expr :: HNil, Expr :: HNil] = rule { push (cursor) ~ TERMOP ~ pTerm ~> bexpr }
 
   // we don't have multiplication but we prime for it in the future
   def pTerm:   Rule1[Expr]  = rule { pFactor }
   def pFactor: Rule1[Expr]  = rule { pAmount | pParens | pRef }
-  def pRef:    Rule1[Ref]   = rule { ID ~> { (id: String) => Ref (AccountId(id)) }  }
+  def pRef:    Rule1[Ref]   = rule { push (cursor) ~ ID ~> { (cu: Int, id: String) => Ref (AccountId(id), loc(cu)) }  }
   def pParens: Rule1[Expr]  = rule { LPAR ~ pExpr ~ RPAR }
   def pAmount: Rule1[Const] = rule {
-    FINUM ~> { (nprec: (Long,Precision)) => Const(nprec._1,nprec._2) } }
+    push (cursor) ~ FINUM ~> { (cu: Int, nprec: (Long,Precision)) => Const (nprec._1, nprec._2, loc (cu)) } }
 
 
 
@@ -138,8 +137,8 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   def RPAR  = kwd (")")
   def LBRK  = kwd ("[")
   def RBRK  = kwd ("]")
-  def MINUS = rule { atomic("-" ~ WS) ~ push (BOp_MINUS) }
-  def PLUS  = rule { atomic("+" ~ WS) ~ push (BOp_PLUS)   }
+  def MINUS = rule { atomic("-" ~ WS) ~ push (BOp.MINUS) }
+  def PLUS  = rule { atomic("+" ~ WS) ~ push (BOp.PLUS)   }
 
   def PLUSEQ  = kwd ("+=")
   def EQPLUS  = kwd ("=+")
@@ -149,15 +148,15 @@ case class LedgerParser (val input: ParserInput, val fname: String) extends Pars
   def LEFT = kwd ("<-")
   def RIGHT = kwd ("->")
 
-  def EQ  = rule { atomic("==" ~ WS) ~ push (BOp_EQ) }
-  def LT  = rule { atomic("<"  ~ WS) ~ push (BOp_LT) }
-  def LTE = rule { atomic("<=" ~ WS) ~ push (BOp_LTE) }
-  def GT  = rule { atomic(">"  ~ WS) ~ push (BOp_GT) }
-  def GTE = rule { atomic(">=" ~ WS) ~ push (BOp_GTE) }
-  def AND = rule { atomic("&&" ~ WS) ~ push (BOp_AND) }
-  def OR = rule { atomic("||" ~ WS) ~ push (BOp_OR) }
+  def EQ  = rule { atomic("==" ~ WS) ~ push (BOp.EQ) }
+  def LT  = rule { atomic("<"  ~ WS) ~ push (BOp.LT) }
+  def LTE = rule { atomic("<=" ~ WS) ~ push (BOp.LTE) }
+  def GT  = rule { atomic(">"  ~ WS) ~ push (BOp.GT) }
+  def GTE = rule { atomic(">=" ~ WS) ~ push (BOp.GTE) }
+  def AND = rule { atomic("&&" ~ WS) ~ push (BOp.AND) }
+  def OR = rule { atomic("||" ~ WS) ~ push (BOp.OR) }
 
-  def TERMOP :Rule1[BOp] = rule {  MINUS | PLUS }
+  def TERMOP :Rule1[BOp] = rule { MINUS | PLUS }
   def COMPOP :Rule1[BOp] = rule { EQ | LT | LTE | GT | GTE }
   def BOOLOP :Rule1[BOp] = rule { AND | OR }
 

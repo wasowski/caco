@@ -4,7 +4,6 @@ import org.scalatest.{FreeSpec, Matchers,Inside}
 import scala.util.{Try,Success,Failure}
 import reflect.io.Path._
 import caco.ast.ledger._
-import caco.ast.ledger.operators._
 
 class LedgerParserSpec extends FreeSpec with Matchers with Inside {
 
@@ -85,32 +84,32 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
     "pExpr" in {
 
       LedgerParser ("self_insurance", fname).pRef.run() should matchPattern
-      { case Success (Ref(AccountId("self_insurance"))) => }
+      { case Success (Ref(AccountId("self_insurance"),loc)) => }
 
       LedgerParser ("self_insurance", fname).pFactor.run() should matchPattern
-      { case Success (Ref(AccountId("self_insurance"))) => }
+      { case Success (Ref(AccountId("self_insurance"),loc)) => }
 
       LedgerParser ("self_insurance", fname).pTerm.run() should matchPattern
-      { case Success (Ref(AccountId("self_insurance"))) => }
+      { case Success (Ref(AccountId("self_insurance"),loc)) => }
 
       LedgerParser ("bike", fname).pExpr.run() should matchPattern
-      { case Success (Ref(AccountId("bike"))) => }
+      { case Success (Ref(AccountId("bike"),loc)) => }
 
       LedgerParser ("bike + car", fname).pExpr.run() should matchPattern
-      { case Success (BExpr(Ref(AccountId("bike")),Ref(AccountId("car")),BOp_PLUS)) => }
+      { case Success (BExpr(Ref(AccountId("bike"),_),Ref(AccountId("car"),_),BOp.PLUS,_)) => }
 
       LedgerParser ("bike + car - dog", fname).pExpr.run() should matchPattern
-      { case Success (BExpr(BExpr(Ref(AccountId("bike")),Ref(AccountId("car")),BOp_PLUS),Ref(AccountId("dog")),BOp_MINUS)) => }
+      { case Success (BExpr(BExpr(Ref(AccountId("bike"),_),Ref(AccountId("car"),_),BOp.PLUS,_),Ref(AccountId("dog"),_),BOp.MINUS,_)) => }
 
       LedgerParser ("bike + (car - dog)", fname).pExpr.run() should matchPattern
-      { case Success (BExpr(Ref(AccountId("bike")),BExpr(Ref(AccountId("car")),Ref(AccountId("dog")),BOp_MINUS),BOp_PLUS)) => }
+      { case Success (BExpr(Ref(AccountId("bike"),_),BExpr(Ref(AccountId("car"),_),Ref(AccountId("dog"),_),BOp.MINUS,_),BOp.PLUS,_)) => }
 
       LedgerParser ("bike < (car - dog)", fname).pExpr.run() should matchPattern
-      { case Success (BExpr(Ref(AccountId("bike")),BExpr(Ref(AccountId("car")),Ref(AccountId("dog")),BOp_MINUS),BOp_LT)) => }
+      { case Success (BExpr(Ref(AccountId("bike"),_),BExpr(Ref(AccountId("car"),_),Ref(AccountId("dog"),_),BOp.MINUS,_),BOp.LT,_)) => }
 
       LedgerParser ("bike < 1 && car > 2", fname).pExpr.run() should matchPattern
-      { case Success (BExpr(BExpr(Ref(AccountId("bike")),Const(1,Precision(0)),BOp_LT),
-                            BExpr(Ref(AccountId("car")),Const(2,Precision(0)),BOp_GT),BOp_AND)) => }
+      { case Success (BExpr(BExpr(Ref(AccountId("bike"),_),Const(1,Precision(0),_),BOp.LT,_),
+                            BExpr(Ref(AccountId("car"),_),Const(2,Precision(0),_),BOp.GT,_),BOp.AND,_)) => }
 
     }
 
@@ -118,21 +117,21 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
 
       LedgerParser ("20180102 pl += 10000.00 =- ferie",fname).pOperation.run() should matchPattern {
         case Success(Operation(
-            List(AccountId("pl")), List(AccountId("ferie")), Const(10000,Precision(0)), Date("20180102",_), Nil, _, false)) => }
+            List(AccountId("pl")), List(AccountId("ferie")), Const(10000,Precision(0),loc), Date("20180102",_), Nil, _, false)) => }
 
       LedgerParser ("20180102 pl <- 10000.00 <- ferie",fname).pOperation.run() should matchPattern {
         case Success(Operation(
-            List(AccountId("pl")), List(AccountId("ferie")), Const(10000,Precision(0)), Date("20180102",_), Nil, _, false)) => }
+            List(AccountId("pl")), List(AccountId("ferie")), Const(10000,Precision(0),loc), Date("20180102",_), Nil, _, false)) => }
 
 
       LedgerParser ("180103 pl -= 75,011.32 | Transfer to beneficiary",fname).pOperation.run() should matchPattern {
         case Success(Operation(
-            Nil, List(AccountId("pl")), Const(7501132,Precision(2)), Date("20180103",_),
+            Nil, List(AccountId("pl")), Const(7501132,Precision(2),loc), Date("20180103",_),
             List(" Transfer to beneficiary"), _, false)) => }
 
       LedgerParser ("180103 pl -> 75,011.32 | Transfer to beneficiary",fname).pOperation.run() should matchPattern {
         case Success(Operation(
-            Nil, List(AccountId("pl")), Const(7501132,Precision(2)), Date("20180103",_),
+            Nil, List(AccountId("pl")), Const(7501132,Precision(2),loc), Date("20180103",_),
             List(" Transfer to beneficiary"), _, false)) => }
 
 
@@ -143,7 +142,7 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
 
       LedgerParser (multline,fname).pOperation.run() should matchPattern {
         case Success(Operation(
-            List(AccountId("skat")), Nil, Const(15835,Precision(2)), Date("20180102",_),
+            List(AccountId("skat")), Nil, Const(15835,Precision(2),loc), Date("20180102",_),
             List(" description", " line 1", " line 2"), _, false)) => }
 
     }
@@ -156,7 +155,7 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
 
       LedgerParser (in00,fname).pInvariant.run() should matchPattern {
         case Success(Invariant(
-          BExpr(Ref(AccountId("D")),BExpr(Ref(AccountId("bike")),Ref(AccountId("ferie")),BOp_PLUS),BOp_EQ),
+          BExpr(Ref(AccountId("D"),_),BExpr(Ref(AccountId("bike"),_),Ref(AccountId("ferie"),_),BOp.PLUS,_),BOp.EQ,_),
           Date("20171201",_),Nil,_)
         ) => }
 
@@ -167,8 +166,8 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
       val as00 = "180106 self_insurance == 4,056.15 | with a description -- and comment"
       LedgerParser (as00,fname).pAssertion.run() should matchPattern {
         case Success(Assertion(
-          BExpr(Ref(AccountId("self_insurance")),
-          Const(405615,Precision(2)),BOp_EQ),
+          BExpr(Ref(AccountId("self_insurance"),_),
+          Const(405615,Precision(2),_),BOp.EQ,_),
           Date("20180106",_),
           List(" with a description -- and comment"),_)
         ) => }
@@ -193,7 +192,7 @@ class LedgerParserSpec extends FreeSpec with Matchers with Inside {
       val ac00 = """account D == bike + skat
                    #| Allocated funds""" stripMargin '#'
       LedgerParser (ac00, fname).pAccount.run() should matchPattern {
-        case Success(DerivedAccount(AccountId("D"),BExpr(Ref(AccountId("bike")),Ref(AccountId("skat")),BOp_PLUS),
+        case Success(DerivedAccount(AccountId("D"),BExpr(Ref(AccountId("bike"),_),Ref(AccountId("skat"),_),BOp.PLUS,_),
           List(" Allocated funds"),_)) =>
       }
     }

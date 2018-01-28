@@ -42,6 +42,14 @@ private val NULLDATE = Date ("00000000")
 
 trait Named[Id]    { def id: Id
                      def toString: String      }
+
+object Named {
+
+  def toMap[Id, A <: Named[Id]] (l: List[A]): Map[Id,A] =
+    l.map { (a: A) => a.id -> a }.toMap
+
+}
+
 trait TimeStamped  { def tstamp: Date          }
 trait Describable  { def descr: Description    }
 trait Typed        { def unit: UnitId          }
@@ -58,7 +66,11 @@ sealed trait Line extends Describable with Traceable {
   def getInvariant: Option[Invariant] = None
   def getAssertion: Option[Assertion] = None
   def getOperation: Option[Operation] = None
+  def getCommand: Option[Command] = None
 }
+
+sealed trait Command extends Line with TimeStamped
+{ override def getCommand: Option[Command] = Some (this) }
 
 private val NOLOC = Location ("",-1) // makes testing without parser easier, don't use outside testing code
 
@@ -91,14 +103,14 @@ case class Invariant (
   predicate: Expr,
   tstamp: Date = NULLDATE,
   descr: Description = Nil,
-  loc: Location = NOLOC ) extends Line with TimeStamped
+  loc: Location = NOLOC ) extends Command
 { override def getInvariant = Some(this) }
 
 case class Assertion (
   predicate: Expr,
   tstamp: Date = NULLDATE,
   descr: Description = Nil,
-  loc: Location = NOLOC ) extends Line with TimeStamped
+  loc: Location = NOLOC ) extends Command
 { override def getAssertion = Some(this) }
 
 case class Operation (
@@ -108,35 +120,42 @@ case class Operation (
   tstamp: Date,
   descr: Description = Nil,
   loc: Location = NOLOC,
-  pending: Boolean = false ) extends Line with TimeStamped
+  pending: Boolean = false ) extends Command
 { override def getOperation = Some(this) }
 
 
-sealed trait Expr
+sealed trait Expr extends Traceable
 
-object operators {
+sealed trait UOp
 
-  sealed trait BOp
-  case object BOp_PLUS extends BOp
-  case object BOp_MINUS extends BOp
-  case object BOp_EQ  extends BOp
-  case object BOp_LT  extends BOp
-  case object BOp_LTE extends BOp
-  case object BOp_GT  extends BOp
-  case object BOp_GTE extends BOp
-  case object BOp_AND extends BOp
-  case object BOp_OR extends BOp
+object UOp {
 
-  sealed trait UOp
-  case object UOp_MINUS extends UOp
+  case object MINUS extends UOp
+
 }
 
-import operators._
 
-case class Ref (id: AccountId) extends Expr
-case class BExpr (left: Expr, right: Expr, op: BOp) extends Expr
-case class UExpr (op: UOp, right: Expr) extends Expr
-case class Const (value: Long, prec: Precision) extends Expr // prec records how much we scaled up during parsing
+
+sealed trait BOp
+
+object BOp {
+
+  case object PLUS extends BOp
+  case object MINUS extends BOp
+  case object EQ  extends BOp
+  case object LT  extends BOp
+  case object LTE extends BOp
+  case object GT  extends BOp
+  case object GTE extends BOp
+  case object AND extends BOp
+  case object OR extends BOp
+
+}
+
+case class Ref (id: AccountId, loc: Location) extends Expr
+case class BExpr (left: Expr, right: Expr, op: BOp, loc: Location) extends Expr
+case class UExpr (op: UOp, right: Expr, loc: Location) extends Expr
+case class Const (value: Long, prec: Precision, loc: Location) extends Expr // prec records how much we scaled up during parsing
 
 // companion objects
 

@@ -2,7 +2,6 @@ package caco.ast
 
 import org.scalatest.{FreeSpec, Matchers}
 import caco.ast.ledger._
-import caco.ast.ledger.operators._
 import caco.Location
 
 class ledgerSpec extends FreeSpec with Matchers {
@@ -32,15 +31,15 @@ class ledgerSpec extends FreeSpec with Matchers {
       val queue = ActiveAccount (AccountId("queue"), UnitId("DKK"), "a buffer awaiting for transfer")
 
       ActiveAccount (AccountId("queue"), UnitId("DKK"), "a buffer awaiting for transfer", l)
-      DerivedAccount (AccountId("D"), BExpr(Ref(AccountId("bike")),Ref(AccountId("queue")),BOp_PLUS))
+      DerivedAccount (AccountId("D"), BExpr(Ref(AccountId("bike"),NOLOC),Ref(AccountId("queue"),NOLOC),BOp.PLUS,NOLOC))
 
     }
 
     "invariants and assertions" in {
 
-      Invariant (BExpr(Ref(AccountId("bike")), Ref(AccountId("queue")), BOp_EQ))
-      Invariant (BExpr(Ref(AccountId("bike")), Ref(AccountId("queue")), BOp_EQ), Date ("20171201"))
-      Assertion (BExpr(Ref(AccountId("bike")), Ref(AccountId("queue")), BOp_EQ), Date ("20171201"))
+      Invariant (BExpr(Ref(AccountId("bike"),NOLOC), Ref(AccountId("queue"),NOLOC), BOp.EQ,NOLOC))
+      Invariant (BExpr(Ref(AccountId("bike"),NOLOC), Ref(AccountId("queue"),NOLOC), BOp.EQ,NOLOC), Date ("20171201"))
+      Assertion (BExpr(Ref(AccountId("bike"),NOLOC), Ref(AccountId("queue"),NOLOC), BOp.EQ,NOLOC), Date ("20171201"))
     }
 
     "operations" in {
@@ -49,11 +48,11 @@ class ledgerSpec extends FreeSpec with Matchers {
       Operation (
         src = List(AccountId("bike"),AccountId("queue")),
         tgt = List(AccountId("queue")),
-        value = Const (378138,Precision(2)),
+        value = Const (378138,Precision(2),NOLOC),
         tstamp = Date("20171201") )
 
-      Operation (List(AccountId("bike")), Nil, Const(5000,Precision(2)), Date("20171204"))
-      Operation (List(AccountId("bike")), Nil, Const(5000,Precision(2)), Date("20171204"), Nil, NOLOC, true)
+      Operation (List(AccountId("bike")), Nil, Const(5000,Precision(2),NOLOC), Date("20171204"))
+      Operation (List(AccountId("bike")), Nil, Const(5000,Precision(2),NOLOC), Date("20171204"), Nil, NOLOC, true)
 
     }
 
