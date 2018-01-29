@@ -23,8 +23,8 @@ object Ast2Model {
     } yield out.ActiveAccount (ac.id, un, ac.descr, ac.loc)
 
 
-  def convert (ex: in.Expr) (ac_env: AccountEnv, ty_env: TypeEnv)
-    : StaticError \/ (out.Expr, TypeEnv) = ex match {
+  def convert (e: in.Expr) (ac_env: AccountEnv, ty_env: TypeEnv)
+    : StaticError \/ (out.Expr, TypeEnv) = e match {
 
       case in.Ref (id,loc) =>
         for {
@@ -82,6 +82,19 @@ object Ast2Model {
         StaticError ("Incompatible types " + ty1 + " and " + ty2, loc).left
     }
 
+  // TODO: something is still wrong (we are not unigying at BExprs, UExprs, etc)
+  // or we are, but we are not enforcing the right type for the operands.
+  // Perhaps fine -> we may do another typechecking pass. Although normally type
+  // checking should be done during inference, so it would be better to simplify
+
+  def concretize (e: out.Expr) (ty_env: TypeEnv): out.Expr = e match {
+    case out.Ref (ac,  ty, loc) => out.Ref (ac, concretize (ty) (ty_env), loc)
+    case out.BExpr (l,r,op,ty,loc) => ???
+    case out.UExpr (op,r,ty,loc) => ???
+    case out.Const (value, prec, tyvar, loc) => ???
+  }
+
+  def concretize (ty: out.Type) (ty_env: TypeEnv): out.Type = ???
 
   def trans_get (id: out.TypeVarId) (ty_env: TypeEnv): out.Type =  {
     assert (ty_env.get(id).isDefined)
@@ -91,12 +104,12 @@ object Ast2Model {
     }
   }
 
-
   def convert (ac: in.DerivedAccount) (un_env: UnitEnv, aa_env: ActiveAccountEnv)
     : StaticError \/ out.DerivedAccount =
     for { // in[A]: StaticError \/ A
       va_t <- convert (ac.value) (aa_env, Map[out.TypeVarId,out.TypeVar]())
-      ty <- va_t._1.ty match {
+      va   =  concretize (va_t._1) (va_t._2)
+      ty   <- va.ty match {
                 case out.UnitTy (un) => un.right
                 case _ => StaticError ("Expression defining a derived account " +
                                 ac.id + " is not of known unit type", ac.loc).left }
