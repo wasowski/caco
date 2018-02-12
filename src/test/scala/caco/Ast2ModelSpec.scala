@@ -17,6 +17,7 @@ class Ast2ModelSpec extends FreeSpec with Matchers with Inside {
 
     val uni = in.Unit(in.UnitId("USD"),"descr",loc,in.Precision(42))
     val ty = out.UnitTy(uni)
+
     val aac     = in.ActiveAccount (in.AccountId("vacation"), in.UnitId("USD"), "descr1", loc)
     val aac_out = out.ActiveAccount (aac.id, uni, aac.descr, aac.loc)
 
@@ -50,15 +51,15 @@ class Ast2ModelSpec extends FreeSpec with Matchers with Inside {
 
     "Single DerivedAccount converts" in {
 
-      val led: in.Ledger =  List[in.Line] (uni, aac, dac)
-      Ast2Model.convert (led) shouldBe \/- (out.Ledger(uni ::Nil, aac_out ::dac_out ::Nil, Nil))
+      val ledger: in.Ledger =  List[in.Line] (uni, aac, dac)
+      Ast2Model.convert (ledger) shouldBe \/- (out.Ledger(uni ::Nil, aac_out ::dac_out ::Nil, Nil))
 
     }
   }
 
   "string-to-instance tests" - {
 
-    "to be written" - { /* TODO */ }
+    "to be written" in { fail /* TODO */ }
 
   }
 
