@@ -79,24 +79,13 @@ object ledger {
 
   // Type language
 
-  object Tag {
-    sealed class TypeVarId
-  }
-
-
-  type TypeVarId = Int @@ Tag.TypeVarId
-  object TypeVarId {
-    def apply (n: Int) = n.asInstanceOf[TypeVarId]
-    def unapply (n: TypeVarId): Option[Int] = Some(n.asInstanceOf[Int])
-  }
-
   sealed trait Type
   case object BooleanTy extends Type
   { override def toString = "Boolean" }
+  case object NumericTy extends Type // to be used only internally in the typechecker?
+  { override def toString = "Numeric" }
   case class  UnitTy (unit: Unit) extends Type
   { override def toString = unit.id.toString }
-  case class  TypeVar (id: TypeVarId) extends Type with Named[TypeVarId]
-  { override def toString = "'" + id }
 
   // Expressions with resolved links
 

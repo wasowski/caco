@@ -29,7 +29,7 @@ class Ast2ModelSpec extends FreeSpec with Matchers with Inside {
     )
     val dac_out = out.DerivedAccount (
       id = dac.id,
-      value = out.BExpr (out.Ref (aac_out,ty,loc), out.Const(1, out.Precision(0), ty, loc), out.BOp.PLUS, ty, loc),
+      value = out.BExpr (out.Ref (aac_out,ty,loc), out.Const(1, out.Precision(0), out.NumericTy, loc), out.BOp.PLUS, ty, loc),
       descr = dac.descr,
       loc = dac.loc,
       unit = uni

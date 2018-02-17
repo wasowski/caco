@@ -131,24 +131,31 @@ sealed trait UOp
 object UOp {
 
   case object MINUS extends UOp
+  case object NOT extends UOp
 
 }
 
 
 
-sealed trait BOp
+sealed trait BOp {
+  def arith = false
+  def logical = false
+}
+
+trait Arithmetic extends BOp { override def arith = true }
+trait Logical extends BOp { override def logical = true }
 
 object BOp {
 
-  case object PLUS extends BOp
-  case object MINUS extends BOp
-  case object EQ  extends BOp
-  case object LT  extends BOp
-  case object LTE extends BOp
-  case object GT  extends BOp
-  case object GTE extends BOp
-  case object AND extends BOp
-  case object OR extends BOp
+  case object PLUS extends BOp with Arithmetic
+  case object MINUS extends BOp with Arithmetic
+  case object EQ  extends BOp with Arithmetic with Logical
+  case object LT  extends BOp with Arithmetic
+  case object LTE extends BOp with Arithmetic
+  case object GT  extends BOp with Arithmetic
+  case object GTE extends BOp with Arithmetic
+  case object AND extends BOp with Logical
+  case object OR extends BOp with Logical
 
 }
 
