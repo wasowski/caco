@@ -84,13 +84,30 @@ object Ast2Model {
     } yield out.DerivedAccount (ac.id, expr, ac.descr, ac.loc, un)
 
 
+  def convert (inv: in.Invariant) (un_env: UnitEnv, ac_env: AccountEnv)
+    : StaticError \/ out.Invariant =
+    for { expr <- convert (inv.predicate) (ac_env) }
+    yield out.Invariant (expr, inv.tstamp, inv.descr, inv.loc)
+
+
+  def convert (assert: in.Assertion) (un_env: UnitEnv, ac_env: AccountEnv)
+    : StaticError \/ out.Assertion = ???
+
+
+
+  def convert (oper: in.Operation) (un_env: UnitEnv, ac_env: AccountEnv)
+    : StaticError \/ out.Operation = ???
+
+
 
   def convert (cm: in.Command) (un_env: UnitEnv, ac_env: AccountEnv)
     : StaticError \/ out.Command = cm match {
-      case inv: in.Invariant => ???
-      case as: in.Assertion => ???
-      case op: in.Operation => ???
+      case inv: in.Invariant => convert (cm) (un_env, ac_env)
+      case as: in.Assertion => convert (as) (un_env, ac_env)
+      case op: in.Operation => convert (op) (un_env, ac_env)
   }
+
+
 
   def convert (le: in.Ledger): StaticError \/ out.Ledger =
 

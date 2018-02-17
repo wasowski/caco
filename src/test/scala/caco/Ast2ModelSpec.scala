@@ -8,6 +8,7 @@ import caco.model.{ledger => out}
 
 import scalaz._
 import Scalaz._
+import scala.util.{Try,Success,Failure} // hide these from Scalaz
 
 class Ast2ModelSpec extends FreeSpec with Matchers with Inside {
 
@@ -57,9 +58,62 @@ class Ast2ModelSpec extends FreeSpec with Matchers with Inside {
     }
   }
 
+  def mkModel (s: String, name: String) :StaticError \/ out.Ledger = {
+    val ast = LedgerParser (s, name).pLedger.run()
+    ast match {
+      case Success (l) => Ast2Model.convert (l)
+      case _ => fail }
+  }
+
   "string-to-instance tests" - {
 
-    "to be written" in { fail /* TODO */ }
+    "unit" in {
+      val m = mkModel ("unit DKK | danske kroner",  "unit")
+      m should matchPattern { case \/-(_) => }
+      m match {
+        case \/-(l) => l.units should matchPattern {
+          case in.Unit (in.UnitId("DKK"),List(" danske kroner"),_,in.Precision(2))::_ => }
+        case -\/(_) => fail
+      }
+    }
+
+    "unit-account" in {
+      val m = mkModel (
+        """|unit DKK | danske kroner
+           |account bike [DKK]""".stripMargin,  "unit-account")
+      m should matchPattern { case \/-(_) => }
+      m match {
+        case \/-(l) => l.accounts should matchPattern {
+          case out.ActiveAccount (in.AccountId("bike"),in.Unit(out.UnitId("DKK"),_,_,_),_,_)::_ => }
+        case -\/(_) => fail
+      }
+    }
+
+    "unit-account-derived" in {
+      val m = mkModel (
+        """|unit DKK | danske kroner
+           |account bike [DKK]
+           |account ferie [DKK]
+           |account D == bike + ferie | Allocated funds in Denmark""".stripMargin,  "unit-account-derived")
+      m should matchPattern { case \/-(_) => }
+      m match {
+        case \/-(l) => l.accounts should matchPattern {
+          case List(_,_,out.DerivedAccount (
+            in.AccountId("D"),
+            out.BExpr(out.Ref(_,_,_),_,_,_,_),_,_,in.Unit(out.UnitId("DKK"),_,_,_))) => }
+        case -\/(_) => fail
+      }
+    }
+
+    "unit-account-derived-invariant" ignore {
+
+        val m = mkModel (
+        """|unit DKK | danske kroner
+           |account bike [DKK]
+           |account ferie [DKK]
+           |account D == bike + ferie | Allocated funds in Denmark
+           |171201 invariant D == bike + ferie - 1""".stripMargin,  "unit-account-derived-invariant")
+    }
 
   }
 
