@@ -102,7 +102,7 @@ object Ast2Model {
 
   def convert (cm: in.Command) (un_env: UnitEnv, ac_env: AccountEnv)
     : StaticError \/ out.Command = cm match {
-      case inv: in.Invariant => convert (cm) (un_env, ac_env)
+      case inv: in.Invariant =>  convert (inv) (un_env, ac_env)
       case as: in.Assertion => convert (as) (un_env, ac_env)
       case op: in.Operation => convert (op) (un_env, ac_env)
   }

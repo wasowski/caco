@@ -105,14 +105,17 @@ class Ast2ModelSpec extends FreeSpec with Matchers with Inside {
       }
     }
 
-    "unit-account-derived-invariant" ignore {
+    "unit-account-derived-invariant" in {
 
-        val m = mkModel (
+        val result = mkModel (
         """|unit DKK | danske kroner
            |account bike [DKK]
            |account ferie [DKK]
-           |account D == bike + ferie | Allocated funds in Denmark
-           |171201 invariant D == bike + ferie - 1""".stripMargin,  "unit-account-derived-invariant")
+           |account D == bike + ferie + 1 | Allocated funds in Denmark
+           |171201 invariant D == bike + ferie + 1""".stripMargin,  "unit-account-derived-invariant")
+
+        result.isRight  shouldBe true
+        result map { l => l.commands should matchPattern { case out.Invariant (_,_,_,_)::Nil => } }
     }
 
   }
