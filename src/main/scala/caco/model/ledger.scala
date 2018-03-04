@@ -77,6 +77,13 @@ object ledger {
     units:    List[Unit],
     accounts: List[Account],
     commands: List[Command] )
+  {
+    override def toString: String =
+      (this.units.map (_.toString) ++
+       this.accounts.map (_.toString) ++
+       this.commands.map (_.toString)).mkString ("\n")
+
+  }
 
   // Type language
 

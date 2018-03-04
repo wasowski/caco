@@ -1,15 +1,20 @@
 package caco
 
-import caco.ast.ledger.Ledger
+import caco.model.ledger.Ledger
+
+import scalaz._
+import Scalaz._
 
 object Main extends App {
 
   // we assume that the argument is a list of files for now
 
-  var le: Ledger = Loader.load (args)
+  val le: StaticError \/ Ledger =
+    Loader.load (args) |> (Ast2Model.convert _)
 
-  print(le map (_.toString) mkString "\n")
 
-  // name analysis
+
+  print(le)
+
 
 }
