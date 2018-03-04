@@ -48,7 +48,7 @@ object Ast2Model {
         } yield out.UExpr (op, r, t, loc)
 
       case in.Const (value, prec, loc) =>
-        \/- { out.Const(value, prec, out.NumericTy, loc) }
+        out.Const(value, prec, out.NumericTy, loc).right
     }
 
 
@@ -110,8 +110,8 @@ object Ast2Model {
   def ensureActive[B] (error: => B) (account: out.Account): B \/ out.ActiveAccount =
     account match {
 
-      case a: out.ActiveAccount => \/- (a)
-      case _ => -\/ (error)
+      case a: out.ActiveAccount => a.right
+      case _ => error.left
     }
 
 
