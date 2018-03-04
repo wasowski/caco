@@ -33,6 +33,7 @@ object ledger {
   sealed trait Account extends Describable with HasUnit with Typed with Traceable with Named[AccountId] {
     def ty: Type = UnitTy (unit)
     def prec: Precision = unit.prec
+    def isActive: Boolean
   }
 
   case class ActiveAccount (
@@ -40,14 +41,14 @@ object ledger {
     unit: Unit,
     descr: Description,
     loc: Location,
-  ) extends Account
+  ) extends Account { def isActive: Boolean = true }
 
   case class DerivedAccount (
     id: AccountId,
     value: Expr,
     descr: Description,
     loc: Location,
-    unit: Unit) extends Account
+    unit: Unit) extends Account { def isActive: Boolean = false }
 
   case class Operation (
     src: List[ActiveAccount],
@@ -58,7 +59,7 @@ object ledger {
     loc: Location,
     pending: Boolean,
     unit: Unit) extends Command with Typed
-  { def ty = value.ty }
+  { def ty = UnitTy (unit) }
 
   case class Invariant (
     predicate: Expr,

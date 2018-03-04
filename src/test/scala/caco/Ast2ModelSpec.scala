@@ -118,6 +118,18 @@ class Ast2ModelSpec extends FreeSpec with Matchers with Inside {
         result map { l => l.commands should matchPattern { case out.Invariant (_,_,_,_)::Nil => } }
     }
 
+    "unit-account-operation" in {
+
+        val result = mkModel (
+        """|unit DKK | danske kroner
+           |account bike [DKK]
+           |171201 bike <- 3,781.38""".stripMargin,  "unit-account-operation")
+
+        result.isRight  shouldBe true
+        result map { l => l.commands should matchPattern { case out.Operation (_,_,_,_,_,_,_,_)::Nil => } }
+    }
+
+
   }
 
 }

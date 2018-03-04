@@ -89,14 +89,50 @@ object Ast2Model {
     for { expr <- convert (inv.predicate) (ac_env) }
     yield out.Invariant (expr, inv.tstamp, inv.descr, inv.loc)
 
-
+  // TODO: we need a converter of assertions as well
   def convert (assert: in.Assertion) (un_env: UnitEnv, ac_env: AccountEnv)
     : StaticError \/ out.Assertion = ???
 
+  // Should this be moved out to model?
+  def ensureActive[B] (error: => B) (account: out.Account): B \/ out.ActiveAccount =
+    account match {
+      case a: out.ActiveAccount => \/- (a)
+      case _ => -\/ (error)
+    }
 
+  def convert (oper: in.Operation) (ac_env: AccountEnv)
+    : StaticError \/ out.Operation = {
 
-  def convert (oper: in.Operation) (un_env: UnitEnv, ac_env: AccountEnv)
-    : StaticError \/ out.Operation = ???
+    val errAccountGet = StaticError ("Operations can only get means from active accounts", oper.loc)
+    val errAccountSet = StaticError ("Operations can only put means into active accounts", oper.loc)
+    val errUnit = StaticError ("All source and target account of an operation must have the same unit", oper.loc)
+
+    for { // in[A]: StaticError \/ A
+
+      src <- oper.src
+              .map { ac_env (_) }
+              .right
+              .flatMap { _.map { ensureActive (errAccountGet) (_) }.sequenceU }
+
+      tgt <- oper.tgt
+              .map { a => ac_env (a) }
+              .right
+              .flatMap { _.map { ensureActive (errAccountSet) (_) }.sequenceU }
+
+      all = src ++ tgt
+
+      expr <- convert (oper.value) (ac_env)
+
+      unit <- all
+              .map {_.unit}
+              .right
+              .ensure (errUnit) { !_.exists (_ != all.head.unit)  }
+              .map { _.head }
+
+    } yield out.Operation (src, tgt, expr, oper.tstamp, oper.descr, oper.loc, oper.pending, unit)
+
+  }
+
 
 
 
@@ -104,7 +140,7 @@ object Ast2Model {
     : StaticError \/ out.Command = cm match {
       case inv: in.Invariant =>  convert (inv) (un_env, ac_env)
       case as: in.Assertion => convert (as) (un_env, ac_env)
-      case op: in.Operation => convert (op) (un_env, ac_env)
+      case op: in.Operation => convert (op) (ac_env)
   }
 
 
