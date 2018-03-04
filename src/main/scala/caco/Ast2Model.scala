@@ -84,16 +84,19 @@ object Ast2Model {
     } yield out.DerivedAccount (ac.id, expr, ac.descr, ac.loc, un)
 
 
-  def convert (inv: in.Invariant) (un_env: UnitEnv, ac_env: AccountEnv)
-    : StaticError \/ out.Invariant =
-    for { expr <- convert (inv.predicate) (ac_env) }
-    yield out.Invariant (expr, inv.tstamp, inv.descr, inv.loc)
+  def convert (inv: in.Invariant) (un_env: UnitEnv, ac_env: AccountEnv):
+    StaticError \/ out.Invariant =
+      for { expr <- convert (inv.predicate) (ac_env) }
+      yield out.Invariant (expr, inv.tstamp, inv.descr, inv.loc)
 
-  // TODO: we need a converter of assertions as well
-  def convert (assert: in.Assertion) (un_env: UnitEnv, ac_env: AccountEnv)
-    : StaticError \/ out.Assertion = ???
+  def convert (assert: in.Assertion) (un_env: UnitEnv, ac_env: AccountEnv):
+    StaticError \/ out.Assertion =
+      for { expr <- convert (assert.predicate) (ac_env) }
+      yield out.Assertion (expr, assert.tstamp, assert.descr, assert.loc)
 
-  // Should this be moved out to model?
+
+  // Should this be moved out to model? Will we need it elsewere
+  /** convert a list of accounts to ActiveAccounts or fail */
   def ensureActive[B] (error: => B) (account: out.Account): B \/ out.ActiveAccount =
     account match {
       case a: out.ActiveAccount => \/- (a)
