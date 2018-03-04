@@ -15,12 +15,17 @@ object Ast2Model {
   type ActiveAccountEnv = Map[AccountId, out.ActiveAccount]
   type DerivedAccountEnv = Map[AccountId, out.DerivedAccount]
 
+
+
   def convert (ac: in.ActiveAccount) (un_env: UnitEnv): StaticError \/ out.ActiveAccount =
     for {
       un <- un_env.get (ac.unit) \/> StaticError ("Undefined unit:" + ac.unit, ac.loc)
     } yield out.ActiveAccount (ac.id, un, ac.descr, ac.loc)
 
-  def convert (e: in.Expr) (ac_env: AccountEnv) : StaticError \/ out.Expr = e match {
+
+
+  def convert (e: in.Expr) (ac_env: AccountEnv): StaticError \/ out.Expr =
+    e match {
 
       case in.Ref (id,loc) =>
         for { ac <- ac_env.get (id) \/> StaticError ("Undefined account " + id, loc) }
@@ -44,8 +49,9 @@ object Ast2Model {
 
       case in.Const (value, prec, loc) =>
         \/- { out.Const(value, prec, out.NumericTy, loc) }
-
     }
+
+
 
   def unify (ty1: out.Type, ty2: out.Type) (loc: Location) :StaticError \/ out.Type =
     (ty1, ty2) match {
@@ -72,6 +78,7 @@ object Ast2Model {
 
   def convert (ac: in.DerivedAccount) (un_env: UnitEnv, aa_env: ActiveAccountEnv)
     : StaticError \/ out.DerivedAccount =
+
     for { // in[A]: StaticError \/ A
 
       expr <- convert (ac.value) (aa_env)
@@ -81,31 +88,35 @@ object Ast2Model {
                     StaticError ("Expression defining a derived account " +
                                  " is not of known unit type", ac.loc).left
       }
+
     } yield out.DerivedAccount (ac.id, expr, ac.descr, ac.loc, un)
 
 
-  def convert (inv: in.Invariant) (un_env: UnitEnv, ac_env: AccountEnv):
-    StaticError \/ out.Invariant =
+
+  def convert (inv: in.Invariant) (ac_env: AccountEnv): StaticError \/ out.Invariant =
       for { expr <- convert (inv.predicate) (ac_env) }
       yield out.Invariant (expr, inv.tstamp, inv.descr, inv.loc)
 
-  def convert (assert: in.Assertion) (un_env: UnitEnv, ac_env: AccountEnv):
-    StaticError \/ out.Assertion =
+
+
+  def convert (assert: in.Assertion) (ac_env: AccountEnv): StaticError \/ out.Assertion =
       for { expr <- convert (assert.predicate) (ac_env) }
       yield out.Assertion (expr, assert.tstamp, assert.descr, assert.loc)
+
 
 
   // Should this be moved out to model? Will we need it elsewere
   /** convert a list of accounts to ActiveAccounts or fail */
   def ensureActive[B] (error: => B) (account: out.Account): B \/ out.ActiveAccount =
     account match {
+
       case a: out.ActiveAccount => \/- (a)
       case _ => -\/ (error)
     }
 
-  def convert (oper: in.Operation) (ac_env: AccountEnv)
-    : StaticError \/ out.Operation = {
 
+
+  def convert (oper: in.Operation) (ac_env: AccountEnv): StaticError \/ out.Operation = {
     val errAccountGet = StaticError ("Operations can only get means from active accounts", oper.loc)
     val errAccountSet = StaticError ("Operations can only put means into active accounts", oper.loc)
     val errUnit = StaticError ("All source and target account of an operation must have the same unit", oper.loc)
@@ -123,26 +134,24 @@ object Ast2Model {
               .flatMap { _.map { ensureActive (errAccountSet) (_) }.sequenceU }
 
       all = src ++ tgt
-
-      expr <- convert (oper.value) (ac_env)
-
       unit <- all
-              .map {_.unit}
+              .map { _.unit }
               .right
               .ensure (errUnit) { !_.exists (_ != all.head.unit)  }
               .map { _.head }
 
+      expr <- convert (oper.value) (ac_env)
+
     } yield out.Operation (src, tgt, expr, oper.tstamp, oper.descr, oper.loc, oper.pending, unit)
-
   }
-
 
 
 
   def convert (cm: in.Command) (un_env: UnitEnv, ac_env: AccountEnv)
     : StaticError \/ out.Command = cm match {
-      case inv: in.Invariant =>  convert (inv) (un_env, ac_env)
-      case as: in.Assertion => convert (as) (un_env, ac_env)
+
+      case inv: in.Invariant => convert (inv) (ac_env)
+      case as: in.Assertion => convert (as) (ac_env)
       case op: in.Operation => convert (op) (ac_env)
   }
 
