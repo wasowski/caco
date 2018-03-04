@@ -7,14 +7,16 @@ import Scalaz._
 
 object Main extends App {
 
-  // we assume that the argument is a list of files for now
+  // assume that the argument is a list of files for now
 
-  val le: StaticError \/ Ledger =
-    Loader.load (args) |> (Ast2Model.convert _)
+  for { // in[A]: StaticError \/ Ledger
 
+    le <- Loader.load (args) |> Ast2Model.convert _
+    runtimeState = le |> Interpreter.run _
 
+    _ = print(le)
+    _ = print(runtimeState)
 
-  print(le)
-
+  } yield (runtimeState)
 
 }
