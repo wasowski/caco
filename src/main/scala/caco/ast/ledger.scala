@@ -135,8 +135,6 @@ object ledger {
 
   }
 
-
-
   sealed trait BOp {
     def arith = false
     def logical = false
