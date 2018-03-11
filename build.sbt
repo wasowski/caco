@@ -14,5 +14,6 @@ lazy val root = (project in file(".")).settings (
   libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test",
   libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
   libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.4",
-  libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.18"
+  libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.18",
+  libraryDependencies += "com.github.nscala-money" %% "nscala-money" % "0.13.0"
 )
