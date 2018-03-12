@@ -16,21 +16,26 @@ object Interpreter {
     Money.of (CurrencyUnit.of(u.id.toString), v)
 
   // TODO implement
+  // start with assignments, then do the others.
   def processCommand (c: ledger.Command): MState[Unit] = State { case s => (s,()) }
+
+  def outputUnit[A] (a: A): (A,Unit) = (a,()) // isn't this some standard scalaz operation?
 
   def processUnit (u: ledger.Unit): MState[Unit] =
     State {
       case s =>
         val c = CurrencyUnit register (u.id.toString,1,u.prec.##,List(),true);
-        (s.copy (units=s.units + (u.id->c)),()) // TODO: lenses
+        s.copy (units=s.units + (u.id->c)) |> outputUnit // TODO: lenses
     }
 
   def processAccount (a: ledger.Account): MState[Unit] =
     State {
-      case s => (a match {
-        case a: ledger.ActiveAccount => s.copy(accounts=s.accounts + (a.id -> unitV (a.unit))) // TODO: lenses
-        case a: ledger.DerivedAccount => s.copy(derived=a::s.derived)
-      },())
+      case s => a match {
+        case a: ledger.ActiveAccount =>
+          s.copy (accounts=s.accounts + (a.id -> unitV (a.unit))) |> outputUnit // TODO: lenses
+        case a: ledger.DerivedAccount =>
+          s.copy (derived=a::s.derived) |> outputUnit // TODO: lenses
+      }
     }
 
 
@@ -40,17 +45,14 @@ object Interpreter {
       _ <- l.units
              .map { processUnit _ }
              .sequenceU
-             .map { _ => () }
 
       _ <- l.accounts
              .map { processAccount _ }
              .sequenceU
-             .map { _ => () }
 
       _ <- l.commands
              .map { processCommand _ }
              .sequenceU
-             .map { _ => () }
 
     } yield get
 
